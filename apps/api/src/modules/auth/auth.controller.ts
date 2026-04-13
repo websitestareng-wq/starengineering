@@ -16,19 +16,22 @@ const AUTH_COOKIE_NAME = "access_token";
 const ROLE_COOKIE_NAME = "user_role";
 
 const isProduction = process.env.NODE_ENV === "production";
+const sharedCookieDomain = isProduction ? ".stareng.co.in" : undefined;
 
 const authCookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: "strict" as const,
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
   path: "/",
+  domain: sharedCookieDomain,
 };
 
 const roleCookieOptions = {
   httpOnly: true,
   secure: isProduction,
-  sameSite: "strict" as const,
+  sameSite: isProduction ? ("none" as const) : ("lax" as const),
   path: "/",
+  domain: sharedCookieDomain,
 };
 
 @Controller("auth")
@@ -102,12 +105,8 @@ export class AuthController {
 
     await this.authService.logoutUser(user.id);
 
-    res.clearCookie(AUTH_COOKIE_NAME, {
-      path: "/",
-    });
-    res.clearCookie(ROLE_COOKIE_NAME, {
-      path: "/",
-    });
+    res.clearCookie(AUTH_COOKIE_NAME, authCookieOptions);
+    res.clearCookie(ROLE_COOKIE_NAME, roleCookieOptions);
 
     res.setHeader(
       "Cache-Control",
