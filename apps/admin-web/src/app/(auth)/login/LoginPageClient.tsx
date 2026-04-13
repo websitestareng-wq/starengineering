@@ -25,6 +25,7 @@ import CaptchaField from "@/components/ui/CaptchaField";
 import { identifyPortalUser, loginAdmin, loginUser } from "@/lib/auth";
 import { ADMIN_ROUTES, USER_ROUTES } from "@/lib/routes";
 import type { PortalRole } from "@/lib/types";
+import error from "next/dist/api/error";
 
 type PrimaryFormState = {
   emailOrPhone: string;
@@ -194,13 +195,25 @@ function persistSessionUser(user: unknown) {
     }
   }
 
-  async function handleVerificationSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    resetError();
+async function handleVerificationSubmit(event: FormEvent<HTMLFormElement>) {
+  event.preventDefault();
 
-    try {
-      setIsSubmitting(true);
+  console.log("VERIFY SUBMIT CALLED");
+  console.log("VERIFY STATE", {
+    detectedRole,
+    requiresSecretKey,
+    isAdminVerification,
+    isVerificationDisabled,
+    captchaToken: verificationForm.captchaToken,
+    secretKey: verificationForm.secretKey,
+    emailOrPhone: primaryForm.emailOrPhone.trim(),
+  });
 
+  resetError();
+
+  try {
+    setIsSubmitting(true);
+console.log("BEFORE ADMIN CHECK", { isAdminVerification, detectedRole });
       if (isAdminVerification) {
         const result = await loginAdmin({
           emailOrPhone: primaryForm.emailOrPhone.trim(),
@@ -231,11 +244,18 @@ router.refresh();
 return;
       }
 
-      const result = await loginUser({
-        emailOrPhone: primaryForm.emailOrPhone.trim(),
-        password: primaryForm.password,
-        captchaToken: verificationForm.captchaToken,
-      });
+      console.log("CALLING loginUser", {
+  emailOrPhone: primaryForm.emailOrPhone.trim(),
+  captchaToken: verificationForm.captchaToken,
+});
+
+const result = await loginUser({
+  emailOrPhone: primaryForm.emailOrPhone.trim(),
+  password: primaryForm.password,
+  captchaToken: verificationForm.captchaToken,
+});
+
+console.log("loginUser RESULT", result);
 
       // ❌ DO NOTHING - backend cookie already set
 
@@ -253,6 +273,7 @@ const userRedirectPath =
 
 router.replace(userRedirectPath);
 router.refresh();
+console.error("VERIFY SUBMIT ERROR", error);
     } catch (error) {
       const message =
         error instanceof Error
