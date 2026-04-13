@@ -25,7 +25,6 @@ import CaptchaField from "@/components/ui/CaptchaField";
 import { identifyPortalUser, loginAdmin, loginUser } from "@/lib/auth";
 import { ADMIN_ROUTES, USER_ROUTES } from "@/lib/routes";
 import type { PortalRole } from "@/lib/types";
-import error from "next/dist/api/error";
 
 type PrimaryFormState = {
   emailOrPhone: string;
@@ -239,8 +238,7 @@ const adminRedirectPath =
     ? nextPath
     : ADMIN_ROUTES.DASHBOARD;
 
-router.replace(adminRedirectPath);
-router.refresh();
+window.location.href = adminRedirectPath;
 return;
       }
 
@@ -271,9 +269,8 @@ const userRedirectPath =
     ? nextPath
     : USER_ROUTES.DASHBOARD;
 
-router.replace(userRedirectPath);
-router.refresh();
-console.error("VERIFY SUBMIT ERROR", error);
+window.location.href = userRedirectPath;
+return;
     } catch (error) {
       const message =
         error instanceof Error
