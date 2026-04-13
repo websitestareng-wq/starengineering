@@ -1,0 +1,255 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model User {
+  id                   String    @id @default(cuid())
+  name                 String
+  email                String    @unique
+  phone                String?   @unique
+  passwordHash         String
+  secretKeyHash        String?
+  gstin                String?
+  pan                  String?
+  address              String?
+  role                 UserRole
+  isActive             Boolean   @default(true)
+  lastLoginAt          DateTime?
+  lastCredentialSentAt DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+  lastPasswordChangedAt DateTime?
+  sessionId String?
+
+  transactions          Transaction[]  @relation("TransactionParty")
+  createdTransactions   Transaction[]  @relation("TransactionCreatedBy")
+  uploadedDocumentFiles DocumentFile[] @relation("DocumentFileUploadedBy")
+  createdReminders      Reminder[]     @relation("ReminderCreatedBy")
+
+  @@index([email])
+  @@index([phone])
+  @@index([gstin])
+  @@index([pan])
+}
+
+model Transaction {
+  id          String          @id @default(cuid())
+  voucherNo   String
+  voucherDate DateTime
+  type        TransactionType
+  side        EntrySide
+  amount      Decimal         @db.Decimal(18, 2)
+  particulars String
+  sendEmail   Boolean         @default(false)
+  partyId     String
+  createdById String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  party       User                    @relation("TransactionParty", fields: [partyId], references: [id], onDelete: Restrict)
+  createdBy   User?                   @relation("TransactionCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+  billRows    TransactionBillRow[]
+  attachments TransactionAttachment[]
+
+  @@unique([voucherNo, type, voucherDate])
+  @@index([partyId])
+  @@index([createdById])
+  @@index([voucherDate])
+  @@index([type])
+  @@index([side])
+  @@index([voucherNo])
+}
+
+model TransactionBillRow {
+  id               String             @id @default(cuid())
+  transactionId    String
+  allocationType   BillAllocationType
+  side             EntrySide
+  refNo            String?
+  amount           Decimal            @db.Decimal(18, 2)
+  againstBillRowId String?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  transaction    Transaction          @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  againstBillRow TransactionBillRow?  @relation("BillRowSettlements", fields: [againstBillRowId], references: [id], onDelete: SetNull)
+  settlementRows TransactionBillRow[] @relation("BillRowSettlements")
+
+  @@index([transactionId])
+  @@index([allocationType])
+  @@index([side])
+  @@index([refNo])
+  @@index([againstBillRowId])
+}
+
+model TransactionAttachment {
+  id            String                    @id @default(cuid())
+  transactionId String
+  kind          TransactionAttachmentKind @default(SOURCE)
+  fileName      String
+  fileUrl       String
+  mimeType      String?
+  sizeInBytes   Int?
+  sourceOrder   Int?
+  isMain        Boolean                   @default(false)
+  createdAt     DateTime                  @default(now())
+  updatedAt     DateTime                  @updatedAt
+
+  transaction Transaction @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+
+  @@index([transactionId])
+  @@index([kind])
+  @@index([transactionId, kind])
+  @@index([transactionId, sourceOrder])
+}
+
+model DocumentCategory {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  folders DocumentFolder[]
+  files   DocumentFile[]
+
+  @@unique([name])
+  @@index([createdAt])
+}
+
+model DocumentFolder {
+  id             String   @id @default(cuid())
+  name           String
+  categoryId     String?
+  parentFolderId String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  category     DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  parentFolder DocumentFolder?   @relation("DocumentFolderChildren", fields: [parentFolderId], references: [id], onDelete: Cascade)
+  childFolders DocumentFolder[]  @relation("DocumentFolderChildren")
+  files        DocumentFile[]
+
+  @@unique([name, categoryId, parentFolderId])
+  @@index([categoryId])
+  @@index([parentFolderId])
+  @@index([createdAt])
+}
+
+model DocumentFile {
+  id           String   @id @default(cuid())
+  name         String
+  originalName String
+  fileName     String
+  fileUrl      String
+  r2Key        String?
+  mimeType     String?
+  sizeInBytes  Int?
+  categoryId   String?
+  folderId     String?
+  uploadedById String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  category   DocumentCategory? @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  folder     DocumentFolder?   @relation(fields: [folderId], references: [id], onDelete: Cascade)
+  uploadedBy User?             @relation("DocumentFileUploadedBy", fields: [uploadedById], references: [id], onDelete: SetNull)
+
+  @@index([categoryId])
+  @@index([folderId])
+  @@index([uploadedById])
+  @@index([createdAt])
+}
+
+model Reminder {
+  id       String         @id @default(cuid())
+  title    String
+  category String?
+  notes    String?
+  type     ReminderType
+  status   ReminderStatus @default(ACTIVE)
+
+  dueDate        DateTime
+  notifyHour     Int?
+  notifyMinute   Int?
+  lastNotifiedAt DateTime?
+
+  weeklyDays  String[] @default([])
+  monthlyDay  Int?
+  yearlyMonth Int?
+  yearlyDay   Int?
+
+  emailEnabled    Boolean @default(true)
+  isSeriesStopped Boolean @default(false)
+
+  createdById String?
+  completedAt DateTime?
+  stoppedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  createdBy User? @relation("ReminderCreatedBy", fields: [createdById], references: [id], onDelete: SetNull)
+
+  @@index([type])
+  @@index([status])
+  @@index([dueDate])
+  @@index([createdById])
+  @@index([isSeriesStopped])
+  @@index([completedAt])
+}
+
+enum ReminderType {
+  ONE_TIME
+  WEEKLY
+  MONTHLY
+  YEARLY
+}
+
+enum ReminderStatus {
+  ACTIVE
+  COMPLETED
+  STOPPED
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  ADMIN
+  ADMIN_VIEWER
+  PROPRIETOR
+  USER
+}
+
+enum TransactionType {
+  SALES
+  PURCHASE
+  PAYMENT
+  RECEIPT
+  DEBIT_NOTE
+  CREDIT_NOTE
+  JOURNAL_DR
+  JOURNAL_CR
+}
+
+enum EntrySide {
+  DR
+  CR
+}
+
+enum BillAllocationType {
+  NEW_REF
+  AGAINST_REF
+  ADVANCE
+  ON_ACCOUNT
+}
+
+enum TransactionAttachmentKind {
+  SOURCE
+  MERGED
+}
