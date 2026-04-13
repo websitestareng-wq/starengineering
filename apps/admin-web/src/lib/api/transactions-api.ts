@@ -1,8 +1,5 @@
 import { apiRequest } from "../api-client";
-function getAccessToken() {
-  if (typeof window === "undefined") return "";
-  return window.localStorage.getItem("accessToken") || "";
-}
+
 export type TransactionType =
   | "SALES"
   | "PURCHASE"
@@ -255,21 +252,19 @@ export async function getTransactions(
   const query = searchParams.toString();
 
   return apiRequest<TransactionRecord[]>(
-  `/transactions${query ? `?${query}` : ""}`,
-  {
-    method: "GET",
-    token: getAccessToken(),
-  },
-);
+    `/transactions${query ? `?${query}` : ""}`,
+    {
+      method: "GET",
+    },
+  );
 }
 
 export async function getTransactionById(
   id: string,
 ): Promise<TransactionRecord> {
- return apiRequest<TransactionRecord>(`/transactions/${id}`, {
-  method: "GET",
-  token: getAccessToken(),
-});
+  return apiRequest<TransactionRecord>(`/transactions/${id}`, {
+    method: "GET",
+  });
 }
 
 export async function parseTransactionDocument(
@@ -279,13 +274,12 @@ export async function parseTransactionDocument(
   formData.append("mainDocument", file);
 
   return apiRequest<ParsedTransactionDocumentResponse>(
-  "/transactions/parse-document",
-  {
-    method: "POST",
-    body: formData,
-    token: getAccessToken(),
-  },
-);
+    "/transactions/parse-document",
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
 }
 
 export async function createTransaction(
@@ -295,10 +289,9 @@ export async function createTransaction(
   const formData = buildTransactionFormData(payload, options);
 
   return apiRequest<TransactionRecord>("/transactions", {
-  method: "POST",
-  body: formData,
-  token: getAccessToken(),
-});
+    method: "POST",
+    body: formData,
+  });
 }
 
 export async function updateTransaction(
@@ -309,10 +302,9 @@ export async function updateTransaction(
   const formData = buildTransactionFormData(payload, options);
 
   return apiRequest<TransactionRecord>(`/transactions/${id}`, {
-  method: "PATCH",
-  body: formData,
-  token: getAccessToken(),
-});
+    method: "PATCH",
+    body: formData,
+  });
 }
 
 export async function deleteTransaction(
@@ -335,35 +327,32 @@ export async function getOpenRefs(
   }
 
   return apiRequest<OpenRefRecord[]>(
-  `/transactions/open-refs?${searchParams.toString()}`,
-  {
-    method: "GET",
-    token: getAccessToken(),
-  },
-);
+    `/transactions/open-refs?${searchParams.toString()}`,
+    {
+      method: "GET",
+    },
+  );
 }
 
 export async function sendTransactionEmail(
   id: string,
 ): Promise<{ success: boolean; message: string }> {
   return apiRequest<{ success: boolean; message: string }>(
-  `/transactions/${id}/send-email`,
-  {
-    method: "POST",
-    token: getAccessToken(),
-  },
-);
+    `/transactions/${id}/send-email`,
+    {
+      method: "POST",
+    },
+  );
 }
 
 export async function bulkSendTransactionEmails(
   transactionIds: string[],
 ): Promise<{ success: boolean; message: string; total: number }> {
   return apiRequest<{ success: boolean; message: string; total: number }>(
-  `/transactions/bulk-send-email`,
-  {
-    method: "POST",
-    body: JSON.stringify({ transactionIds }),
-    token: getAccessToken(),
-  },
-);
+    `/transactions/bulk-send-email`,
+    {
+      method: "POST",
+      body: JSON.stringify({ transactionIds }),
+    },
+  );
 }
