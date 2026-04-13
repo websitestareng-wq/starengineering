@@ -1,10 +1,4 @@
 import { apiRequest } from "./api-client";
-
-function getAccessToken() {
-  if (typeof window === "undefined") return "";
-  return window.localStorage.getItem("accessToken") || "";
-}
-
 export type DashboardPartyOption = {
   id: string;
   name: string;
@@ -148,11 +142,10 @@ export async function getDashboardOverview(params: {
   if (params.to) query.set("to", params.to);
   if (params.partyId) query.set("partyId", params.partyId);
 
-  return apiRequest<DashboardOverviewResponse>(
-    `/dashboard/overview?${query.toString()}`,
-    {
-      method: "GET",
-      token: getAccessToken(),
-    },
-  );
+return apiRequest<DashboardOverviewResponse>(
+  `/dashboard/overview?${query.toString()}`,
+  {
+    method: "GET",
+  },
+);
 }
