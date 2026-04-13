@@ -89,10 +89,11 @@ export default function CaptchaField({
         sitekey: siteKey,
         theme: "light",
         appearance: "always",
-        callback: (token: string) => {
-          onChangeRef.current(token);
-          setRenderError("");
-        },
+       callback: (token: string) => {
+  console.log("CAPTCHA TOKEN:", token); // 👈 ADD THIS
+  onChangeRef.current(token);
+  setRenderError("");
+},
         "expired-callback": () => {
           onChangeRef.current("");
           setHideWidget(false);
