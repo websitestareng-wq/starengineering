@@ -114,28 +114,36 @@ export default function UserTopbar({ onMenuClick }: TopbarProps) {
       .slice(0, 2)
       .toUpperCase() || "US";
 
-  const handleLogout = async () => {
-    try {
-      await logoutPortal();
-    } catch {
-      // backend logout fail ho tab bhi client cleanup continue kare
-    }
+const handleLogout = async () => {
+  try {
+    await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // ignore
+  }
 
-    try {
-      AUTH_STORAGE_KEYS.forEach((key) => {
-        window.localStorage.removeItem(key);
-        window.sessionStorage.removeItem(key);
-      });
-    } catch {
-      // ignore cleanup failure
-    }
+  try {
+    AUTH_STORAGE_KEYS.forEach((key) => {
+      window.localStorage.removeItem(key);
+      window.sessionStorage.removeItem(key);
+    });
 
-    setMenuOpen(false);
+    // 🔥 FORCE COOKIE DELETE (CRITICAL)
+    document.cookie =
+      "access_token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.stareng.co.in";
+    document.cookie =
+      "user_role=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; domain=.stareng.co.in";
+  } catch {
+    // ignore
+  }
 
-    window.history.replaceState(null, "", "/login");
-    window.location.replace("/login");
-  };
+  setMenuOpen(false);
 
+  // 🔥 HARD REDIRECT
+  window.location.href = "/login";
+};
   return (
     <header className="fixed left-0 right-0 top-0 z-30 border-b border-slate-200/80 bg-white/90 backdrop-blur-md lg:left-[290px]">
       <div className="flex h-[64px] w-full items-center gap-3 px-3 sm:px-4 lg:px-6 xl:px-8">
