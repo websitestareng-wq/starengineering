@@ -104,14 +104,14 @@ function useCountUp(target: number, duration = 3000) {
 
       const progress = Math.min((timestamp - startTime) / duration, 1);
       const eased = 1 - Math.pow(1 - progress, 3);
-      const nextValue = finalValue * eased;
+      const nextValue = Math.floor(finalValue * eased);
 
       setCount(nextValue);
 
       if (progress < 1) {
         frameId = window.requestAnimationFrame(step);
       } else {
-        setCount(finalValue);
+        setCount(Math.floor(finalValue));
       }
     };
 
@@ -137,7 +137,7 @@ function AnimatedCurrencyValue({
 
   return (
     <span className={className}>
-      {formatDashboardCardAmount(animatedValue)}
+      formatCurrency(Math.floor(animatedValue))
       {suffix ? <span className="ml-1">{suffix}</span> : null}
     </span>
   );
@@ -820,10 +820,12 @@ if (error) {
       <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
         {data?.summary.finalClosingLabel || "Final Closing"}
       </p>
-      <p className={cn("mt-2 text-[28px] font-bold tracking-tight sm:text-[34px]", finalClosingTone.value)}>
-        {formatCurrency(Number(data?.summary.finalClosingAmount || 0))}
-        {data?.summary.finalClosingSide ? ` ${data.summary.finalClosingSide}` : ""}
-      </p>
+     <p className={cn("mt-2 text-[28px] font-bold tracking-tight sm:text-[34px]", finalClosingTone.value)}>
+  <AnimatedCurrencyValue
+    value={Number(data?.summary.finalClosingAmount || 0)}
+  />
+  {data?.summary.finalClosingSide ? ` ${data.summary.finalClosingSide}` : ""}
+</p>
       <p className="mt-2 text-sm text-slate-500">
         Bills receivable/payable, unraised, unreceived and on-account closing basis.
       </p>
@@ -1139,7 +1141,7 @@ if (error) {
                   </PieChart>
                 </ResponsiveContainer>
               </div>
-<div className="grid grid-cols-2 gap-2.5 xl:grid-cols-1">
+<div className="grid grid-cols-1 gap-2.5">
   {data.charts.voucherTypeDistribution
     .filter((item) => Number(item.value || 0) > 0)
     .map((item, index) => (
