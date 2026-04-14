@@ -127,7 +127,32 @@ function formatTypeLabel(type?: string | null) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(" ");
 }
+function readPortalUser() {
+  if (typeof window === "undefined") return null;
 
+  const keys = ["currentUser", "auth_user", "user"];
+
+  for (const key of keys) {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) continue;
+
+    try {
+      const parsed = JSON.parse(raw) as {
+        id?: string;
+        name?: string;
+        role?: string;
+      };
+
+      if (parsed?.id) {
+        return parsed;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  return null;
+}
 function openAttachmentInNewTab(
   attachment?: TransactionAttachmentRecord | null,
 ) {
@@ -213,7 +238,11 @@ const [filters, setFilters] = useState<LedgerFilters>(defaultFilters);
 const [draftFilters, setDraftFilters] = useState<LedgerFilters>(defaultFilters);
 const [filterOpen, setFilterOpen] = useState(false);
 const [mounted, setMounted] = useState(false);
-
+const [portalUser, setPortalUser] = useState<{
+  id?: string;
+  name?: string;
+  role?: string;
+} | null>(null);
   async function loadData(soft = false) {
     try {
       if (soft) setRefreshing(true);
@@ -229,7 +258,9 @@ const [mounted, setMounted] = useState(false);
 useEffect(() => {
   setMounted(true);
 }, []);
-
+useEffect(() => {
+  setPortalUser(readPortalUser());
+}, []);
 useEffect(() => {
   if (!filterOpen) {
     document.body.style.overflow = "";
@@ -902,6 +933,27 @@ useEffect(() => {
               }}
             >
               <div className="space-y-3.5">
+                <div>
+  <label className="mb-2 block text-sm font-semibold text-slate-700">
+    Party
+  </label>
+
+  <select
+    value={partyId}
+    onChange={(e) => setPartyId(e.target.value)}
+    className="h-10.5 w-full rounded-[18px] border border-slate-200 bg-white px-3 text-sm font-medium text-slate-800 outline-none transition-all duration-200 focus:border-violet-400 focus:ring-4 focus:ring-violet-100"
+  >
+    {partyOptions.length === 0 ? (
+      <option value="">No parties found</option>
+    ) : null}
+
+    {partyOptions.map((party) => (
+      <option key={party.id} value={party.id}>
+        {party.name}
+      </option>
+    ))}
+  </select>
+</div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="mb-2 block text-sm font-semibold text-slate-700">

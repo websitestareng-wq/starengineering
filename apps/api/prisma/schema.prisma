@@ -25,7 +25,7 @@ model User {
   createdAt            DateTime  @default(now())
   updatedAt            DateTime  @updatedAt
   lastPasswordChangedAt DateTime?
-  sessionId String?
+  sessionVersion        Int       @default(1)
 
   transactions          Transaction[]  @relation("TransactionParty")
   createdTransactions   Transaction[]  @relation("TransactionCreatedBy")

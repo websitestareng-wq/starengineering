@@ -8,7 +8,6 @@ import { PrismaService } from "../../prisma/prisma.service";
 import { LoginDto } from "./dto/login.dto";
 import { CaptchaService } from "../../common/services/captcha.service";
 import * as bcrypt from "bcrypt";
-import { randomUUID } from "crypto";
 
 @Injectable()
 export class AuthService {
@@ -65,7 +64,8 @@ export class AuthService {
 
     const requiresSecretKey =
       user.role === "SUPER_ADMIN" ||
-      user.role === "ADMIN_VIEWER";
+      user.role === "ADMIN_VIEWER" ||
+      user.role === "ADMIN";
 
     return {
       success: true,
@@ -111,14 +111,10 @@ export class AuthService {
       );
     }
 
-    // 🔥 SESSION CREATE
-    const sessionId = randomUUID();
-
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         lastLoginAt: new Date(),
-        sessionId,
       },
     });
 
@@ -128,7 +124,7 @@ export class AuthService {
         role: user.role,
         email: user.email,
         phone: user.phone,
-        sessionId,
+        sessionVersion: user.sessionVersion,
       },
       {
         expiresIn: "30m",
@@ -201,14 +197,10 @@ export class AuthService {
       throw new UnauthorizedException("Invalid secret key.");
     }
 
-    // 🔥 SESSION CREATE (ADMIN ALSO)
-    const sessionId = randomUUID();
-
     await this.prisma.user.update({
       where: { id: user.id },
       data: {
         lastLoginAt: new Date(),
-        sessionId,
       },
     });
 
@@ -218,7 +210,7 @@ export class AuthService {
         role: user.role,
         email: user.email,
         phone: user.phone,
-        sessionId,
+        sessionVersion: user.sessionVersion,
       },
       {
         expiresIn: "30m",
@@ -238,12 +230,13 @@ export class AuthService {
     };
   }
 
-  // 🔥 GLOBAL LOGOUT (ALL TABS / DEVICES)
   async logoutUser(userId: string) {
     await this.prisma.user.update({
       where: { id: userId },
       data: {
-        sessionId: null,
+        sessionVersion: {
+          increment: 1,
+        },
       },
     });
   }
