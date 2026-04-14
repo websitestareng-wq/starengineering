@@ -135,12 +135,12 @@ function AnimatedCurrencyValue({
 }) {
   const animatedValue = useCountUp(value, 3000);
 
-  return (
-    <span className={className}>
-      formatCurrency(Math.floor(animatedValue))
-      {suffix ? <span className="ml-1">{suffix}</span> : null}
-    </span>
-  );
+ return (
+  <span className={className}>
+    {formatCurrency(Math.floor(animatedValue))}
+    {suffix ? <span className="ml-1">{suffix}</span> : null}
+  </span>
+);
 }
 function formatCurrency(value: number) {
   const num = Number(value || 0);
