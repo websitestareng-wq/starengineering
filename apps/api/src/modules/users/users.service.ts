@@ -183,14 +183,21 @@ async verifyMyPassword(
 
     const passwordHash = await bcrypt.hash(newPassword, 10);
 
-    await this.prisma.user.update({
+await this.prisma.user.update({
   where: { id: userId },
   data: {
     passwordHash,
     lastPasswordChangedAt: new Date(),
-    sessionVersion: {
-      increment: 1,
-    },
+  },
+});
+
+await this.prisma.userSession.updateMany({
+  where: {
+    userId,
+    isActive: true,
+  },
+  data: {
+    isActive: false,
   },
 });
     // Password updated email
