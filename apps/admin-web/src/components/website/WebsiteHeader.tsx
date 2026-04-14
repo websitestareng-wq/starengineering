@@ -1,5 +1,5 @@
 "use client";
-
+import { UserCircle2 } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
@@ -35,7 +35,7 @@ export default function WebsiteHeader() {
         }}
       >
         <div className="container headerRow">
-          <div className="headerLeft">
+          <div className="headerLeft websiteHeaderLeft">
             <button
               type="button"
               className="hamburger"
@@ -47,16 +47,18 @@ export default function WebsiteHeader() {
               <span />
             </button>
 
-            <Link href="/" className="brand brandWithLogo">
+            <Link href="/" className="brand brandWithLogo websiteBrand">
               <Image
-                className="brandLogo"
+                className="brandLogo websiteBrandLogo"
                 src="/logo/star-logo.png"
                 alt="STAR Engineering"
                 width={50}
                 height={50}
                 priority
               />
-              <span className="brandWord gradText">STAR ENGINEERING</span>
+              <span className="brandWord gradText websiteBrandWord">
+                STAR Engineering
+              </span>
             </Link>
           </div>
 
@@ -87,15 +89,20 @@ export default function WebsiteHeader() {
             </Link>
           </nav>
 
-          <div className="headerRight">
-            <button
-              type="button"
-              className="btn btnAnim btnLogin"
-              onClick={goLogin}
-            >
-              Login
-            </button>
-          </div>
+          <div className="headerRight websiteHeaderRight">
+  <button
+    type="button"
+    className="btn btnAnim btnLogin websiteLoginBtn"
+    onClick={goLogin}
+    aria-label="Login"
+    title="Login"
+  >
+    <span className="websiteLoginText">Login</span>
+    <span className="websiteLoginIcon" aria-hidden="true">
+      <UserCircle2 size={20} strokeWidth={2.4} />
+    </span>
+  </button>
+</div>
         </div>
       </header>
 
