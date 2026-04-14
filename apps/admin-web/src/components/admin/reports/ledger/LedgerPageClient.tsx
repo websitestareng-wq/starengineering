@@ -803,83 +803,90 @@ useEffect(() => {
 
               <div className="overflow-hidden rounded-[22px] border border-violet-100/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,245,255,0.92))] shadow-[0_12px_28px_rgba(124,58,237,0.08)] lg:hidden">
   <table className="w-full table-fixed">
-    <colgroup>
-      <col className="w-[24%]" />
-      <col className="w-[44%]" />
-      <col className="w-[22%]" />
-      <col className="w-[10%]" />
-    </colgroup>
-    <thead className="border-b border-violet-100 bg-[linear-gradient(135deg,rgba(168,85,247,0.07),rgba(124,58,237,0.05),rgba(236,72,153,0.04))]">
-      <tr className="text-left text-[10px] uppercase tracking-[0.16em] text-slate-500">
-        <th className="px-3 py-2.5 font-semibold">Date</th>
-        <th className="px-3 py-2.5 font-semibold">Particulars</th>
-        <th className="px-3 py-2.5 text-right font-semibold">Amount</th>
-        <th className="px-2 py-2.5 text-center font-semibold">Act</th>
-      </tr>
-    </thead>
-    <tbody>
-      {ledgerRows.map((row, index) => (
-        <motion.tr
-  key={row.id}
-  variants={fadeUp}
-  initial="initial"
-  animate="animate"
-  exit="exit"
-  className={`${
-    index !== 0 ? "border-t border-slate-100" : ""
-  } align-top transition-colors duration-200 hover:bg-violet-50/30`}
->
-          <td className="px-3 py-3">
-            <p className="text-[12px] font-semibold leading-4 text-slate-900">
-              {formatDate(row.date)}
-            </p>
-          </td>
+<colgroup>
+  <col className="w-[20%]" />
+  <col className="w-[48%]" />
+  <col className="w-[32%]" />
+</colgroup>
+<thead className="border-b border-violet-100 bg-[linear-gradient(135deg,rgba(168,85,247,0.07),rgba(124,58,237,0.05),rgba(236,72,153,0.04))]">
+  <tr className="text-left text-[10px] uppercase tracking-[0.16em] text-slate-500">
+    <th className="px-2 py-2.5 font-semibold">Date</th>
+    <th className="px-2 py-2.5 font-semibold">Particulars</th>
+    <th className="px-2 py-2.5 text-right font-semibold">Amount</th>
+  </tr>
+</thead>
+<tbody>
+  {ledgerRows.map((row, index) => (
+    <motion.tr
+      key={row.id}
+      variants={fadeUp}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className={`${
+        index !== 0 ? "border-t border-slate-100" : ""
+      } align-top transition-colors duration-200 hover:bg-violet-50/30`}
+    >
+      {/* DATE */}
+      <td className="px-2 py-3 align-top">
+        <p className="text-[12px] font-semibold leading-4 text-slate-900 break-words">
+          {formatDate(row.date)}
+        </p>
+      </td>
 
-          <td className="px-3 py-3">
-            <p className="line-clamp-2 text-[12px] leading-4 text-slate-800">
-              {row.particulars || "—"}
-            </p>
-            <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] leading-4 text-slate-500">
-              <span>{formatTypeLabel(String(row.voucherType))}</span>
-              <span>•</span>
-              {row.attachments?.[0]?.fileUrl ? (
-                <button
-                  type="button"
-                  onClick={() => openAttachmentInNewTab(row.attachments[0])}
-                  className="cursor-pointer font-semibold text-violet-700 underline-offset-4 hover:underline"
-                >
-                  {row.voucherNo || "—"}
-                </button>
-              ) : (
-                <span>{row.voucherNo || "—"}</span>
-              )}
-            </div>
-          </td>
+      {/* PARTICULARS */}
+      <td className="px-2 py-3 align-top">
+        <p className="line-clamp-2 text-[12px] leading-4 text-slate-800">
+          {row.particulars || "—"}
+        </p>
 
-          <td className="px-2 py-3 text-right">
-            <p className="text-[12px] font-bold leading-4 text-slate-900">
-              {filters.skipOpeningBalance && row.isOpeningLike
-                ? "SKIPPED"
-                : row.debit
-                  ? `₹ ${formatCurrency(row.debit)}`
-                  : row.credit
-                    ? `₹ ${formatCurrency(row.credit)}`
-                    : ""}
-            </p>
-            <p className="mt-1 text-[11px] leading-4 text-slate-500">
-              {row.debit ? "Debit" : row.credit ? "Credit" : ""}
-            </p>
-          </td>
+        <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] leading-4 text-slate-500">
+          <span>{formatTypeLabel(String(row.voucherType))}</span>
+          <span>•</span>
+          {row.attachments?.[0]?.fileUrl ? (
+            <button
+              type="button"
+              onClick={() => openAttachmentInNewTab(row.attachments[0])}
+              className="cursor-pointer font-semibold text-violet-700 underline-offset-4 hover:underline"
+            >
+              {row.voucherNo || "—"}
+            </button>
+          ) : (
+            <span>{row.voucherNo || "—"}</span>
+          )}
+        </div>
+      </td>
 
-          <td className="px-2 py-3 text-center">
-            <AttachmentIconButton
-              attachment={row.attachments?.[0]}
-              disabled={!row.attachments?.[0]?.fileUrl}
-            />
-          </td>
-       </motion.tr>
-      ))}
-    </tbody>
+      {/* AMOUNT */}
+      <td className="px-2 py-3 text-right align-top">
+        <p className="text-[12px] font-bold leading-4 text-slate-900 break-words">
+          {filters.skipOpeningBalance && row.isOpeningLike
+            ? "SKIPPED"
+            : row.debit
+              ? `${formatCurrency(row.debit)}`
+              : row.credit
+                ? `${formatCurrency(row.credit)}`
+                : ""}
+        </p>
+
+        <p className="mt-1 text-[11px] leading-4 text-slate-500">
+          {row.debit ? "Debit" : row.credit ? "Credit" : ""}
+        </p>
+
+        {/* attachment open */}
+        {row.attachments?.[0]?.fileUrl ? (
+          <button
+            type="button"
+            onClick={() => openAttachmentInNewTab(row.attachments[0])}
+            className="mt-1 text-[11px] font-semibold text-violet-700 underline-offset-4 hover:underline"
+          >
+            Open
+          </button>
+        ) : null}
+      </td>
+    </motion.tr>
+  ))}
+</tbody>
   </table>
 </div>
 

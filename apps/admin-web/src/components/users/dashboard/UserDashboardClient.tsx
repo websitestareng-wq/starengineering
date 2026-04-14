@@ -77,6 +77,71 @@ function toLocalIso(date: Date) {
   const day = `${date.getDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
 }
+function formatDashboardCardAmount(value: number) {
+  const num = Number(value || 0);
+  const abs = Math.abs(num);
+
+  if (abs <= 9999999) {
+    return `₹${num.toLocaleString("en-IN", {
+      maximumFractionDigits: 2,
+      minimumFractionDigits: 0,
+    })}`;
+  }
+
+  return `₹${(num / 10000000).toFixed(2)} Cr`;
+}
+
+function useCountUp(target: number, duration = 3000) {
+  const [count, setCount] = useState(0);
+
+  useEffect(() => {
+    const finalValue = Number(target || 0);
+    let frameId = 0;
+    let startTime: number | null = null;
+
+    const step = (timestamp: number) => {
+      if (startTime === null) startTime = timestamp;
+
+      const progress = Math.min((timestamp - startTime) / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const nextValue = finalValue * eased;
+
+      setCount(nextValue);
+
+      if (progress < 1) {
+        frameId = window.requestAnimationFrame(step);
+      } else {
+        setCount(finalValue);
+      }
+    };
+
+    setCount(0);
+    frameId = window.requestAnimationFrame(step);
+
+    return () => window.cancelAnimationFrame(frameId);
+  }, [target, duration]);
+
+  return count;
+}
+
+function AnimatedCurrencyValue({
+  value,
+  suffix,
+  className = "",
+}: {
+  value: number;
+  suffix?: string;
+  className?: string;
+}) {
+  const animatedValue = useCountUp(value, 3000);
+
+  return (
+    <span className={className}>
+      {formatDashboardCardAmount(animatedValue)}
+      {suffix ? <span className="ml-1">{suffix}</span> : null}
+    </span>
+  );
+}
 function formatCurrency(value: number) {
   const num = Number(value || 0);
   return `₹${num.toLocaleString("en-IN", {
@@ -197,12 +262,14 @@ function SmallStatCard({
   icon: Icon,
   hint,
   tone = "blue",
+  suffix,
 }: {
   title: string;
-  value: string;
+  value: number;
   hint: string;
   icon: ComponentType<{ className?: string }>;
   tone?: "blue" | "emerald" | "violet" | "rose" | "amber";
+  suffix?: string;
 }) {
   const toneClasses: Record<string, string> = {
     blue: "border-blue-100 bg-blue-50 text-blue-700",
@@ -219,14 +286,14 @@ function SmallStatCard({
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: 0.24, ease: "easeOut" }}
       whileHover={{ y: -3 }}
-    className="group relative overflow-hidden rounded-[20px] border border-violet-100/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,245,255,0.92))] p-3 shadow-[0_14px_30px_rgba(124,58,237,0.06)] transition-all duration-300 hover:border-violet-200 hover:shadow-[0_18px_36px_rgba(124,58,237,0.09)] sm:p-3.5"
+      className="group relative overflow-hidden rounded-[20px] border border-violet-100/80 bg-[linear-gradient(180deg,rgba(255,255,255,0.98),rgba(250,245,255,0.92))] p-3.5 shadow-[0_14px_30px_rgba(124,58,237,0.06)] transition-all duration-300 hover:border-violet-200 hover:shadow-[0_18px_36px_rgba(124,58,237,0.09)] sm:p-4"
     >
-    <div className="absolute inset-x-0 top-0 h-16 bg-[linear-gradient(90deg,rgba(168,85,247,0.06),rgba(236,72,153,0.04),rgba(59,130,246,0.05))] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
+      <div className="absolute inset-x-0 top-0 h-16 bg-[linear-gradient(90deg,rgba(168,85,247,0.06),rgba(236,72,153,0.04),rgba(59,130,246,0.05))] opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
 
       <div className="relative flex items-start gap-3">
         <div
           className={cn(
-            "rounded-[18px] border p-2.5 shadow-sm transition-transform duration-300 group-hover:scale-[1.04]",
+            "shrink-0 rounded-[18px] border p-2.5 shadow-sm transition-transform duration-300 group-hover:scale-[1.04]",
             toneClasses[tone],
           )}
         >
@@ -234,13 +301,15 @@ function SmallStatCard({
         </div>
 
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[11px] font-semibold uppercase tracking-[0.14em] text-slate-500">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] leading-4 text-slate-500 sm:text-[11px] sm:tracking-[0.14em]">
             {title}
           </p>
-          <h3 className="mt-1.5 text-[17px] font-bold tracking-tight text-slate-900 sm:text-[21px]">
-            {value}
+
+          <h3 className="mt-1.5 break-words text-[15px] font-bold leading-[1.28] tracking-tight text-slate-900 sm:text-[20px]">
+            <AnimatedCurrencyValue value={value} suffix={suffix} />
           </h3>
-          <p className="mt-1.5 line-clamp-2 text-[10px] leading-4 text-slate-400 sm:text-[11px]">
+
+          <p className="mt-1.5 text-[10px] leading-4 text-slate-400 sm:text-[11px] sm:leading-5">
             {hint}
           </p>
         </div>
@@ -677,7 +746,7 @@ if (error) {
 </div>
 
       <span className="mt-4 inline-flex items-center rounded-full border border-violet-100 bg-white/80 px-4 py-1 text-[11px] font-semibold uppercase tracking-[0.22em] text-violet-700">
-                STAR ENGINEERING USER DASHBOARD
+                USER DASHBOARD
       </span>
 
       <h1 className="mt-4 text-[2rem] font-bold tracking-tight text-slate-900 sm:text-[2.6rem] sm:leading-[1.06]">
@@ -761,7 +830,7 @@ if (error) {
     </div>
   </div>
 </section>
-<section className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-4">
+<section className="grid grid-cols-2 gap-3 [&>*]:min-w-0 sm:grid-cols-3 xl:grid-cols-4">
   {[
     {
       title: "Total Sales",
@@ -861,13 +930,14 @@ if (error) {
     .filter((item) => item.value > 0)
     .map((item) => (
       <SmallStatCard
-        key={item.title}
-        title={item.title}
-        value={`${formatCurrency(item.value)}${"suffix" in item && item.suffix ? item.suffix : ""}`}
-        hint={item.hint}
-        icon={item.icon}
-        tone={item.tone}
-      />
+  key={item.title}
+  title={item.title}
+  value={item.value}
+  suffix={"suffix" in item ? item.suffix : undefined}
+  hint={item.hint}
+  icon={item.icon}
+  tone={item.tone}
+/>
     ))}
 </section>
 

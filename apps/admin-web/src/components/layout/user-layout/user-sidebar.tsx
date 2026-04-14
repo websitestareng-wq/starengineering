@@ -6,15 +6,12 @@ import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   BarChart3,
-  BellRing,
   ChevronDown,
-  FileText,
-  FolderKanban,
+  ScrollText,
   LayoutDashboard,
   ReceiptText,
-  Users,
-  WalletCards,
-  UserCircle2,
+  ArrowLeftRight,
+  UserRound,
 } from "lucide-react";
 
 type NavChildItem = {
@@ -48,7 +45,7 @@ const primaryNavItems: NavItem[] = [
       {
         title: "Ledger",
         href: "/user/reports/ledger",
-        icon: FileText,
+        icon: ScrollText,
       },
       {
         title: "Bill-wise",
@@ -71,7 +68,7 @@ const secondaryNavItems: NavItem[] = [
   {
     title: "Payment Centre",
     href: "/user/payment-centre",
-    icon: WalletCards,
+    icon: ArrowLeftRight,
   },
 ];
 
@@ -79,7 +76,7 @@ const bottomNavItems: NavItem[] = [
   {
     title: "Profile",
     href: "/user/profile",
-    icon: UserCircle2,
+    icon: UserRound,
   },
 ];
 
@@ -348,15 +345,19 @@ const bottomItems = useMemo(() => bottomNavItems, []);
               <span className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full bg-gradient-to-b from-rose-700 via-purple-700 to-blue-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
             ) : null}
 
-            <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-                isActive
-                  ? "bg-white/15 text-white shadow-inner"
-                  : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
-              }`}
-            >
-              <Icon className="h-[18px] w-[18px]" />
-            </span>
+<span
+  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
+    isActive
+      ? "bg-transparent text-white shadow-[0_16px_35px_rgba(99,102,241,0.25)]"
+      : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
+  }`}
+>
+  <Icon
+    className={`h-[18px] w-[18px] ${
+      isActive ? "fill-none stroke-[2.2]" : "fill-none"
+    }`}
+  />
+</span>
 
             <span className="truncate text-sm font-semibold">{item.title}</span>
           </Link>
@@ -381,8 +382,8 @@ const bottomItems = useMemo(() => bottomNavItems, []);
 
           <span
             className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-              isActive || nestedActive
-                ? "sidebar-gradient text-white shadow-[0_12px_28px_rgba(91,33,182,0.25)]"
+             isActive || nestedActive
+  ? "bg-transparent text-violet-700 shadow-none"
                 : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
             }`}
           >
@@ -443,16 +444,19 @@ const bottomItems = useMemo(() => bottomNavItems, []);
           {!isActive ? (
             <span className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full bg-gradient-to-b from-rose-700 via-purple-700 to-blue-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
           ) : null}
-
-          <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-              isActive
-                ? "bg-white/15 text-white shadow-inner"
-                : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
-            }`}
-          >
-            <Icon className="h-[18px] w-[18px]" />
-          </span>
+<span
+  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
+    isActive
+      ? "bg-transparent text-white shadow-[0_16px_35px_rgba(99,102,241,0.25)]"
+      : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
+  }`}
+>
+  <Icon
+    className={`h-[18px] w-[18px] ${
+      isActive ? "fill-none stroke-[2.2]" : "fill-none"
+    }`}
+  />
+</span>
 
           <span className="truncate text-sm font-semibold">{item.title}</span>
         </Link>
@@ -491,16 +495,19 @@ const bottomItems = useMemo(() => bottomNavItems, []);
                       {!isActive ? (
                         <span className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full bg-gradient-to-b from-rose-700 via-purple-700 to-blue-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                       ) : null}
-
-                      <span
-                        className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-                          isActive
-                            ? "bg-white/15 text-white shadow-inner"
-                            : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
-                        }`}
-                      >
-                        <Icon className="h-[18px] w-[18px]" />
-                      </span>
+<span
+  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
+    isActive
+      ? "bg-transparent text-white shadow-[0_16px_35px_rgba(99,102,241,0.25)]"
+      : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
+  }`}
+>
+  <Icon
+    className={`h-[18px] w-[18px] ${
+      isActive ? "fill-none stroke-[2.2]" : "fill-none"
+    }`}
+  />
+</span>
 
                       <span className="truncate text-sm font-semibold">{item.title}</span>
                     </Link>

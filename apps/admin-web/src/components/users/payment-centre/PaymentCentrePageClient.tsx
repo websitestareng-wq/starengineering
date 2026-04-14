@@ -219,7 +219,7 @@ const today = useMemo(() => {
         <button
           type="button"
           onClick={openGateway}
-          className="inline-flex items-center justify-center gap-2 rounded-[20px] bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_50%,#2563eb_100%)] px-5 py-3.5 text-sm font-semibold text-white shadow-[0_18px_34px_rgba(79,70,229,0.28)] transition-all duration-300 hover:-translate-y-0.5"
+         className="inline-flex items-center justify-center gap-2 rounded-[20px] bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_50%,#2563eb_100%)] px-5 py-3.5 text-sm font-semibold text-white !text-white shadow-[0_18px_34px_rgba(79,70,229,0.28)] transition-all duration-300 hover:-translate-y-0.5"
         >
           Start Payment
           <ChevronRight className="h-4 w-4" />
@@ -313,7 +313,7 @@ const today = useMemo(() => {
               </div>
 
           <div className="relative border-b border-slate-200/70 px-4 py-3 sm:px-6">
-  <div className="grid grid-cols-4 gap-2 sm:gap-3">
+  <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 sm:gap-3">
     {[
       { id: 1, label: "Amount" },
       { id: 2, label: "Confirm" },
@@ -325,10 +325,10 @@ const today = useMemo(() => {
       return (
         <div
           key={item.id}
-          className="flex min-w-0 items-center justify-center gap-2 rounded-[18px] border border-slate-200/70 bg-white/80 px-2 py-2.5"
+         className="flex min-w-0 items-center justify-center gap-1.5 rounded-[16px] border border-slate-200/70 bg-white/80 px-2 py-2 sm:gap-2 sm:rounded-[18px] sm:px-2 sm:py-2.5"
         >
           <div
-            className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold transition-all duration-300 sm:h-9 sm:w-9 sm:text-sm ${
+           className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-full text-[11px] font-bold transition-all duration-300 sm:h-9 sm:w-9 sm:text-sm ${
               active
                 ? "bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_55%,#2563eb_100%)] text-white shadow-[0_10px_20px_rgba(79,70,229,0.22)]"
                 : "bg-slate-100 text-slate-500"
@@ -338,7 +338,7 @@ const today = useMemo(() => {
           </div>
 
           <span
-            className={`truncate text-[11px] font-semibold sm:text-sm ${
+            className={`max-w-full truncate text-[10px] font-semibold leading-none sm:text-sm ${
               active ? "text-slate-900" : "text-slate-400"
             }`}
           >
@@ -398,7 +398,7 @@ const today = useMemo(() => {
                       <button
                         type="button"
                         onClick={continueFromAmount}
-                        className="inline-flex items-center justify-center gap-2 rounded-[18px] bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_55%,#2563eb_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(79,70,229,0.24)] transition-all duration-200 hover:-translate-y-0.5"
+                        className="inline-flex items-center justify-center gap-2 rounded-[18px] bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_55%,#2563eb_100%)] px-5 py-3 text-sm font-semibold text-white !text-white shadow-[0_16px_32px_rgba(79,70,229,0.24)] transition-all duration-200 hover:-translate-y-0.5"
                       >
                         Continue
                         <ChevronRight className="h-4 w-4" />
@@ -439,7 +439,7 @@ const today = useMemo(() => {
                       <button
                         type="button"
                         onClick={continueToMethodSelection}
-                        className="inline-flex items-center justify-center gap-2 rounded-[18px] bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_55%,#2563eb_100%)] px-5 py-3 text-sm font-semibold text-white shadow-[0_16px_32px_rgba(79,70,229,0.24)] transition-all duration-200 hover:-translate-y-0.5"
+                        className="inline-flex items-center justify-center gap-2 rounded-[18px] bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_55%,#2563eb_100%)] px-5 py-3 text-sm font-semibold text-white !text-white shadow-[0_16px_32px_rgba(79,70,229,0.24)] transition-all duration-200 hover:-translate-y-0.5"
                       >
                         Select Payment Method
                         <ChevronRight className="h-4 w-4" />
@@ -479,7 +479,7 @@ const today = useMemo(() => {
               <span
                 className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${
                   active
-                    ? "bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_55%,#2563eb_100%)] text-white shadow-[0_12px_24px_rgba(79,70,229,0.22)]"
+                    ? "bg-[linear-gradient(135deg,#7c3aed_0%,#4f46e5_55%,#2563eb_100%)] text-white !text-white shadow-[0_12px_24px_rgba(79,70,229,0.22)]"
                     : "bg-slate-100 text-slate-700"
                 }`}
               >

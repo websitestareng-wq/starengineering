@@ -5,14 +5,13 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence, motion } from "framer-motion";
 import {
-  BellRing,
   LayoutDashboard,
-  WalletCards,
+  ArrowLeftRight,
   ReceiptText,
   ChevronDown,
-  FileText,
+  ScrollText,
   BarChart3,
-  UserCircle2,
+  UserRound,
   X,
 } from "lucide-react";
 
@@ -52,7 +51,7 @@ const primaryNavItems: NavItem[] = [
       {
         title: "Ledger",
         href: "/user/reports/ledger",
-        icon: FileText,
+        icon: ScrollText,
       },
       {
         title: "Bill-wise",
@@ -90,7 +89,7 @@ const secondaryNavItems: NavItem[] = [
   {
     title: "Payment Centre",
     href: "/user/payment-centre",
-    icon: WalletCards,
+    icon: ArrowLeftRight,
   },
 ];
 
@@ -98,7 +97,7 @@ const bottomNavItems: NavItem[] = [
   {
     title: "Profile",
     href: "/user/profile",
-    icon: UserCircle2,
+    icon: UserRound,
   },
 ];
 
@@ -436,12 +435,12 @@ const bottomItems = useMemo(() => bottomNavItems, []);
             ) : null}
 
             <span
-              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-                isActive
-                  ? "bg-white/15 text-white shadow-inner"
-                  : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
-              }`}
-            >
+  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
+    isActive
+      ? "bg-transparent text-white shadow-none"
+      : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
+  }`}
+>
               <Icon className="h-[18px] w-[18px]" />
             </span>
 
@@ -534,12 +533,12 @@ const bottomItems = useMemo(() => bottomNavItems, []);
           ) : null}
 
           <span
-            className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-              isActive
-                ? "bg-white/15 text-white shadow-inner"
-                : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
-            }`}
-          >
+  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
+    isActive
+      ? "bg-transparent text-white shadow-none"
+      : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
+  }`}
+>
             <Icon className="h-[18px] w-[18px]" />
           </span>
 
@@ -584,12 +583,12 @@ const bottomItems = useMemo(() => bottomNavItems, []);
                             ) : null}
 
                             <span
-                              className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-                                isActive
-                                  ? "bg-white/15 text-white shadow-inner"
-                                  : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
-                              }`}
-                            >
+  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
+    isActive
+      ? "bg-transparent text-white shadow-none"
+      : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
+  }`}
+>
                               <Icon className="h-[18px] w-[18px]" />
                             </span>
 

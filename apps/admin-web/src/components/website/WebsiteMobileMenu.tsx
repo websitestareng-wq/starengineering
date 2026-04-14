@@ -12,8 +12,8 @@ type WebsiteMobileMenuProps = {
 const links = [
   { href: "/", label: "Home" },
   { href: "/about", label: "About" },
+    { href: "/shop", label: "Shop" },
   { href: "/contact", label: "Contact" },
-  { href: "/shop", label: "Shop" }
 ];
 
 export default function WebsiteMobileMenu({

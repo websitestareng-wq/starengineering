@@ -8,12 +8,12 @@ import {
   BarChart3,
   BellRing,
   ChevronDown,
-  FileText,
-  FolderKanban,
+  ScrollText,
+  Folder,
   LayoutDashboard,
   ReceiptText,
   Users,
-  WalletCards,
+  ArrowLeftRight,
 } from "lucide-react";
 
 type NavChildItem = {
@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
   {
     title: "Transactions",
     href: "/admin/transactions",
-    icon: WalletCards,
+    icon: ArrowLeftRight,
   },
   {
     title: "Reports",
@@ -57,7 +57,7 @@ const navItems: NavItem[] = [
       {
         title: "Ledger",
         href: "/admin/reports/ledger",
-        icon: FileText,
+        icon: ScrollText,
       },
       {
         title: "Bill-wise",
@@ -92,7 +92,7 @@ const navItems: NavItem[] = [
   {
     title: "Documents",
     href: "/admin/documents",
-    icon: FolderKanban,
+    icon: Folder,
   },
   {
     title: "Reminders",
@@ -362,15 +362,19 @@ export default function Sidebar() {
                     <span className="pointer-events-none absolute inset-y-1 left-0 w-[3px] rounded-full bg-gradient-to-b from-rose-700 via-purple-700 to-blue-700 opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
                   ) : null}
 
-                  <span
-                    className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-                      isActive
-                        ? "bg-white/15 text-white shadow-inner"
-                        : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
-                    }`}
-                  >
-                    <Icon className="h-[18px] w-[18px]" />
-                  </span>
+<span
+  className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
+    isActive
+      ? "bg-transparent text-white shadow-[0_16px_35px_rgba(99,102,241,0.25)]"
+      : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
+  }`}
+>
+  <Icon
+    className={`h-[18px] w-[18px] ${
+      isActive ? "fill-none stroke-[2.2]" : "fill-none"
+    }`}
+  />
+</span>
 
                   <span className="truncate text-sm font-semibold">{item.title}</span>
                 </Link>
@@ -395,8 +399,8 @@ export default function Sidebar() {
 
                 <span
                   className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-[16px] transition-all duration-300 ${
-                    isActive || nestedActive
-                      ? "sidebar-gradient text-white shadow-[0_12px_28px_rgba(91,33,182,0.25)]"
+                  isActive || nestedActive
+  ? "bg-transparent text-violet-700 shadow-none"
                       : "bg-white text-slate-600 shadow-[0_10px_20px_rgba(15,23,42,0.06)] group-hover:scale-110 group-hover:text-slate-900"
                   }`}
                 >

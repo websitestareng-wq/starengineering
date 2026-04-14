@@ -35,7 +35,7 @@ export default function WebsiteHeader() {
         }}
       >
         <div className="container headerRow">
-          <div className="leftRow">
+          <div className="headerLeft">
             <button
               type="button"
               className="hamburger"
@@ -74,11 +74,11 @@ export default function WebsiteHeader() {
               About
             </Link>
             <Link
-  href="/shop"
-  className={`navLink ${pathname === "/shop" ? "active" : ""}`}
->
-  Shop
-</Link>
+              href="/shop"
+              className={`navLink ${pathname === "/shop" ? "active" : ""}`}
+            >
+              Shop
+            </Link>
             <Link
               href="/contact"
               className={`navLink ${pathname === "/contact" ? "active" : ""}`}
@@ -87,9 +87,15 @@ export default function WebsiteHeader() {
             </Link>
           </nav>
 
-          <button type="button" className="btn btnAnim btnLogin" onClick={goLogin}>
-            Login
-          </button>
+          <div className="headerRight">
+            <button
+              type="button"
+              className="btn btnAnim btnLogin"
+              onClick={goLogin}
+            >
+              Login
+            </button>
+          </div>
         </div>
       </header>
 

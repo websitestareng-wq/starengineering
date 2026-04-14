@@ -745,7 +745,7 @@ const passwordLockInfo = getPasswordLockInfo(data?.lastPasswordChangedAt);
   ) : (
     <KeyRound className="h-4 w-4" />
   )}
-  Verify & Continue
+  Verify
 </button>
           </div>
         </div>
