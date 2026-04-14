@@ -11,6 +11,9 @@ import { RemindersModule } from "./modules/reminders/reminders.module";
 import { ScheduleModule } from "@nestjs/schedule";
 import { DashboardModule } from "./modules/dashboard/dashboard.module";
 import { PublicController } from "./modules/public/public.controller";
+import { AppController } from "./app.controller";
+import { AppService } from "./app.service";
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -27,8 +30,8 @@ import { PublicController } from "./modules/public/public.controller";
     DocumentsModule,
     RemindersModule,
   ],
-  controllers: [PublicController],
-  providers: [R2Service],
+  controllers: [AppController, PublicController],
+  providers: [AppService, R2Service],
   exports: [R2Service],
 })
 export class AppModule {}
