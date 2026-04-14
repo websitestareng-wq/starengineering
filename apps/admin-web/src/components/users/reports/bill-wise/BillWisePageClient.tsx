@@ -1283,70 +1283,13 @@ const params = new URLSearchParams({
   </tr>
 </thead>
 <tbody>
-  {filteredRows.map((row, index) => {
-    const [settlementOpen, setSettlementOpen] = [false, () => {}];
-    return (
-      <tr
-        key={row.id}
-        className={`${
-          index !== 0 ? "border-t border-slate-100" : ""
-        } align-top transition-colors duration-200 hover:bg-violet-50/30`}
-      >
-        <td className="px-2 py-3 align-top">
-          <p className="text-[12px] font-semibold leading-4 text-slate-900 break-words">
-            {formatDate(row.date)}
-          </p>
-        </td>
-
-        <td className="px-2 py-3 align-top">
-          <p className="line-clamp-2 text-[12px] leading-4 text-slate-800">
-            {row.narration || "—"}
-          </p>
-
-          <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] leading-4 text-slate-500">
-            {row.attachments?.[0]?.fileUrl ? (
-              <button
-                type="button"
-                onClick={() => openAttachmentInNewTab(row.attachments[0])}
-                className="font-semibold text-violet-700 underline-offset-4 hover:underline"
-              >
-                {row.refNo || "—"}
-              </button>
-            ) : (
-              <span>{row.refNo || "—"}</span>
-            )}
-          </div>
-
-          {row.reportBucket === "receivable-settled-from-advance" ||
-          row.reportBucket === "payable-settled-from-advance" ? (
-            <p className="mt-1 text-[10px] font-semibold leading-4 text-cyan-700">
-              From Adv: {row.originalAdvanceRefNo || "—"}
-            </p>
-          ) : null}
-        </td>
-
-<td className="px-2 py-3 text-right align-top">
-  <p className="whitespace-nowrap text-[12px] font-bold leading-4 text-rose-600">
-    {formatCurrency(row.pendingAmount)}
-  </p>
-
-  <p className="mt-1 whitespace-nowrap text-[10px] leading-4 text-slate-500">
-    {row.status}
-  </p>
-
-{row.settlementRows.length > 0 ? (
-  <button
-    type="button"
-    onClick={() => setSettlementOpen(true)}
-    className="mt-1 ml-auto inline-flex whitespace-nowrap text-right text-[11px] font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
-  >
-    View Settlement
-  </button>
-) : null}
-        </td>
-      </tr>
-    );
-  })}
+  {filteredRows.map((row, index) => (
+    <UserMobileBillWiseRow
+      key={row.id}
+      row={row}
+      bordered={index !== 0}
+    />
+  ))}
 </tbody>
                   </table>
                 </div>
@@ -1688,6 +1631,85 @@ function ReportTableRow({
           >
             {row.status}
           </span>
+        </td>
+      </tr>
+
+      {settlementOpen ? (
+        <SettlementDetailsModal
+          row={row}
+          onClose={() => setSettlementOpen(false)}
+        />
+      ) : null}
+    </>
+  );
+}
+function UserMobileBillWiseRow({
+  row,
+  bordered,
+}: {
+  row: ReportRow;
+  bordered: boolean;
+}) {
+  const [settlementOpen, setSettlementOpen] = useState(false);
+
+  return (
+    <>
+      <tr
+        className={`${
+          bordered ? "border-t border-slate-100" : ""
+        } align-top transition-colors duration-200 hover:bg-violet-50/30`}
+      >
+        <td className="px-2 py-3 align-top">
+          <p className="text-[12px] font-semibold leading-4 text-slate-900 break-words">
+            {formatDate(row.date)}
+          </p>
+        </td>
+
+        <td className="px-2 py-3 align-top">
+          <p className="line-clamp-2 text-[12px] leading-4 text-slate-800">
+            {row.narration || "—"}
+          </p>
+
+          <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] leading-4 text-slate-500">
+            {row.attachments?.[0]?.fileUrl ? (
+              <button
+                type="button"
+                onClick={() => openAttachmentInNewTab(row.attachments[0])}
+                className="font-semibold text-violet-700 underline-offset-4 hover:underline"
+              >
+                {row.refNo || "—"}
+              </button>
+            ) : (
+              <span>{row.refNo || "—"}</span>
+            )}
+          </div>
+
+          {row.reportBucket === "receivable-settled-from-advance" ||
+          row.reportBucket === "payable-settled-from-advance" ? (
+            <p className="mt-1 text-[10px] font-semibold leading-4 text-cyan-700">
+              From Adv: {row.originalAdvanceRefNo || "—"}
+            </p>
+          ) : null}
+        </td>
+
+        <td className="px-2 py-3 text-right align-top">
+          <p className="whitespace-nowrap text-[12px] font-bold leading-4 text-rose-600">
+            {formatCurrency(row.pendingAmount)}
+          </p>
+
+          <p className="mt-1 whitespace-nowrap text-[10px] leading-4 text-slate-500">
+            {row.status}
+          </p>
+
+          {row.settlementRows.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => setSettlementOpen(true)}
+              className="mt-1 ml-auto inline-flex whitespace-nowrap text-right text-[11px] font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
+            >
+              View Settlement
+            </button>
+          ) : null}
         </td>
       </tr>
 
