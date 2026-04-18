@@ -2531,7 +2531,7 @@ drawCompressedText(voucherNoText, voucherNoX, voucherNoY, voucherNoW, {
   fontSize: 9,
   minScale: 58,
   align: "right",
-  color: attachmentUrl ? "#2563eb" : "#111827",
+  color: attachmentUrl ? "#9925eb" : "#111827",
 });
 
 if (
@@ -3491,7 +3491,7 @@ if (!hidePeriodForStatus) {
             : normalFont,
         fontSize: 9,
         minScale: 55,
-        color: attachmentUrl ? "#2563eb" : "#111827",
+        color: attachmentUrl ? "#9925eb" : "#111827",
       });
 
       if (
@@ -4280,7 +4280,7 @@ async generateOnAccountPdf(params: {
         fontSize: 9,
         minScale: 58,
         align: "right",
-        color: attachmentUrl ? "#2563eb" : "#111827",
+        color: attachmentUrl ? "#9925eb" : "#111827",
       });
 
       if (
