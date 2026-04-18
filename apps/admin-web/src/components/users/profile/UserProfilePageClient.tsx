@@ -312,7 +312,7 @@ export default function UserProfilePageClient() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState("");
-
+const [sendPasswordEmail, setSendPasswordEmail] = useState(true);
   useEffect(() => {
     void fetchProfile();
   }, []);
@@ -468,14 +468,15 @@ async function handlePasswordSave() {
     setPasswordSaving(true);
     setPasswordError("");
 
-    const res = await apiFetch("/users/me/password", {
-      method: "PATCH",
-      body: JSON.stringify({
-        currentPassword,
-        newPassword,
-        confirmPassword,
-      }),
-    });
+  const res = await apiFetch("/users/me/password", {
+  method: "PATCH",
+  body: JSON.stringify({
+    currentPassword,
+    newPassword,
+    confirmPassword,
+    sendEmail: sendPasswordEmail,
+  }),
+});
 
     const json = await res.json().catch(() => ({}));
 
@@ -488,6 +489,7 @@ async function handlePasswordSave() {
         setPasswordError("Current password is incorrect.");
         setCurrentPassword("");
         setCurrentPasswordCheck("");
+        
         return;
       }
 
@@ -500,7 +502,7 @@ setCurrentPassword("");
 setCurrentPasswordCheck("");
 setNewPassword("");
 setConfirmPassword("");
-
+setSendPasswordEmail(true);
 try {
   await apiFetch("/auth/logout", {
     method: "POST",
@@ -529,6 +531,7 @@ function closeAllPasswordFlow() {
   setCurrentPasswordCheck("");
   setNewPassword("");
   setConfirmPassword("");
+  setSendPasswordEmail(true);
   setModalStep(null);
 }
 
@@ -866,9 +869,67 @@ const passwordLockInfo = getPasswordLockInfo(data?.lastPasswordChangedAt);
         onClose={() => setModalStep("password-new")}
       >
         <div className="space-y-4">
-          <div className="rounded-[18px] border border-amber-100 bg-amber-50/70 px-4 py-3 text-sm text-amber-800">
-            After saving, your password will be updated and an email notification will be sent.
-          </div>
+        <div className="space-y-4">
+  <div className="rounded-[18px] border border-amber-100 bg-amber-50/70 px-4 py-3 text-sm text-amber-800">
+    You will be given an option to choose the new password to send on your mail after updating the password.
+  </div>
+
+  <div className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.04)]">
+    <p className="text-sm font-semibold text-slate-900">
+      Do you want to send the new password to your email?
+    </p>
+    <p className="mt-1 text-xs leading-5 text-slate-500">
+      If you select "No", the new password will be updated but no email will be sent to your mail.
+    </p>
+
+    <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
+      <button
+        type="button"
+        onClick={() => setSendPasswordEmail(true)}
+        className={cn(
+          "inline-flex min-h-[52px] items-center justify-center rounded-[18px] border px-4 text-sm font-semibold transition-all duration-200",
+          sendPasswordEmail
+            ? "border-emerald-300 bg-emerald-50 text-emerald-700 shadow-[0_10px_24px_rgba(16,185,129,0.10)]"
+            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+        )}
+      >
+        Yes, send on email
+      </button>
+
+      <button
+        type="button"
+        onClick={() => setSendPasswordEmail(false)}
+        className={cn(
+          "inline-flex min-h-[52px] items-center justify-center rounded-[18px] border px-4 text-sm font-semibold transition-all duration-200",
+          !sendPasswordEmail
+            ? "border-rose-300 bg-rose-50 text-rose-700 shadow-[0_10px_24px_rgba(244,63,94,0.10)]"
+            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
+        )}
+      >
+        No, do not send
+      </button>
+    </div>
+  </div>
+
+  <div className="flex gap-2">
+    <button
+      type="button"
+      onClick={() => setModalStep("password-new")}
+      className="inline-flex h-11 flex-1 items-center justify-center rounded-[20px] border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
+    >
+      Back
+    </button>
+    <button
+      type="button"
+      onClick={handlePasswordSave}
+      disabled={passwordSaving}
+      className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[20px] bg-rose-600 text-sm font-semibold text-white disabled:opacity-70"
+    >
+      {passwordSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
+      Save Password
+    </button>
+  </div>
+</div>
 
           <div className="flex gap-2">
             <button

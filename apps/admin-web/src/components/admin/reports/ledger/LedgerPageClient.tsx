@@ -702,7 +702,7 @@ useEffect(() => {
             <div className="space-y-4">
               <EmptyState
                 title="No matching ledger rows"
-                description="Current filter ke hisaab se koi ledger entry nahi mili. Opening aur closing summary upar accurate dikh rahi hai."
+                description="No Transaction found. Please try to change filter."
               />
 
             </div>
