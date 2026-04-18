@@ -910,25 +910,6 @@ const passwordLockInfo = getPasswordLockInfo(data?.lastPasswordChangedAt);
       </button>
     </div>
   </div>
-
-  <div className="flex gap-2">
-    <button
-      type="button"
-      onClick={() => setModalStep("password-new")}
-      className="inline-flex h-11 flex-1 items-center justify-center rounded-[20px] border border-slate-200 bg-white text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
-    >
-      Back
-    </button>
-    <button
-      type="button"
-      onClick={handlePasswordSave}
-      disabled={passwordSaving}
-      className="inline-flex h-11 flex-1 items-center justify-center gap-2 rounded-[20px] bg-rose-600 text-sm font-semibold text-white disabled:opacity-70"
-    >
-      {passwordSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-      Save Password
-    </button>
-  </div>
 </div>
 
           <div className="flex gap-2">
