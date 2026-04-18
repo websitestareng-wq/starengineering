@@ -2918,10 +2918,19 @@ async generateBillWisePdf(params: {
     return String(a.refNo || "").localeCompare(String(b.refNo || ""));
   });
 
-  const openingRows = filteredRows.filter((row) => row.date < fromDate);
-  const periodRows = filteredRows.filter(
-    (row) => row.date >= fromDate && row.date <= toDate,
-  );
+ const isPendingMode =
+  normalizeStatus === "PENDING" ||
+  normalizeStatus === "UNADJUSTED";
+
+const openingRows = isPendingMode
+  ? []
+  : filteredRows.filter((row) => row.date < fromDate);
+
+const periodRows = isPendingMode
+  ? filteredRows
+  : filteredRows.filter(
+      (row) => row.date >= fromDate && row.date <= toDate,
+    );
 
   const openingBill = this.round2(
     openingRows.reduce((sum, row) => sum + Number(row.billAmount || 0), 0),

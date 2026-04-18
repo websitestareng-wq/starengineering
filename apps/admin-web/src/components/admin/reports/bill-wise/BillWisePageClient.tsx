@@ -807,34 +807,45 @@ function applyFilters() {
   }));
 }
 
-  function handleExportPdf() {
-    if (!filters.partyId || !filters.dateFrom || !filters.dateTo) return;
+function handleExportPdf() {
+  if (!filters.partyId) return;
 
-    const params = new URLSearchParams({
-      partyId: filters.partyId,
-      from: filters.dateFrom,
-      to: filters.dateTo,
-    });
+  const needsDate =
+    type === "on-account" ||
+    filters.status === "settled" ||
+    filters.status === "adjusted";
 
-    if (type === "receivable") params.append("mode", "RECEIVABLE_FROM_YOU");
-    if (type === "payable") params.append("mode", "PAYABLE_TO_YOU");
-    if (type === "unraised") params.append("mode", "ADVANCE_RECEIVED");
-    if (type === "unreceived") params.append("mode", "ADVANCE_ISSUED");
+  if (needsDate && (!filters.dateFrom || !filters.dateTo)) return;
 
-    if (type !== "on-account") {
-      params.append("status", filters.status.toUpperCase());
-    }
+  const params = new URLSearchParams({
+    partyId: filters.partyId,
+  });
 
-    const endpoint =
-      type === "on-account"
-        ? "/transactions/reports/on-account/pdf"
-        : "/transactions/reports/bill-wise/pdf";
-
-    window.open(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}?${params.toString()}`,
-      "_blank",
-    );
+  if (needsDate) {
+    params.append("from", filters.dateFrom);
+    params.append("to", filters.dateTo);
   }
+
+  if (type === "receivable") params.append("mode", "RECEIVABLE_FROM_YOU");
+  if (type === "payable") params.append("mode", "PAYABLE_TO_YOU");
+  if (type === "unraised") params.append("mode", "ADVANCE_RECEIVED");
+  if (type === "unreceived") params.append("mode", "ADVANCE_ISSUED");
+  if (type === "on-account") params.append("mode", "ON_ACCOUNT");
+
+  if (type !== "on-account") {
+    params.append("status", filters.status.toUpperCase());
+  }
+
+  const endpoint =
+    type === "on-account"
+      ? "/transactions/reports/on-account/pdf"
+      : "/transactions/reports/bill-wise/pdf";
+
+  window.open(
+    `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}?${params.toString()}`,
+    "_blank",
+  );
+}
 
   return (
     <div className="space-y-4 sm:space-y-5">
