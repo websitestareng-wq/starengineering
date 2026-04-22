@@ -104,7 +104,9 @@ export function buildWelcomeCredentialsEmail(
           border-bottom:1px solid #f5c2c7;
           color:#111827;
           vertical-align:top;
-        ">
+  word-break: break-all;
+  overflow-wrap: anywhere;
+">
           ${loginEmail}
         </td>
       </tr>
