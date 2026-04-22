@@ -2,10 +2,12 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Download,
+  Eye,
   Filter,
   Layers,
   Loader2,
-  FileDown,
+  FileText,
   MoreHorizontal,
   Search,
   X,
@@ -30,6 +32,17 @@ type BillWiseType =
   | "on-account";
 
 type StatusFilter = "pending" | "settled" | "adjusted";
+
+type PdfActionTarget = {
+  url: string;
+  fileName: string;
+  title: string;
+};
+
+type PdfActionModalState = {
+  open: boolean;
+  target: PdfActionTarget | null;
+};
 
 type ReportStatus =
   | "Pending"
@@ -218,11 +231,47 @@ function getStatusClasses(status: ReportStatus) {
   }
 }
 
-function openAttachmentInNewTab(
-  attachment?: TransactionAttachmentRecord | null,
+function openUrlInNewTab(url?: string | null) {
+  if (!url) return;
+  window.open(url, "_blank", "noopener,noreferrer");
+}
+
+async function downloadFileFromUrl(
+  url?: string | null,
+  fileName = "document.pdf",
 ) {
-  if (!attachment?.fileUrl) return;
-  window.open(attachment.fileUrl, "_blank", "noopener,noreferrer");
+  if (!url) return;
+
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to download file: ${response.status}`);
+    }
+
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = blobUrl;
+    a.download = fileName;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(blobUrl);
+  } catch (error) {
+    console.error("Download failed:", error);
+  }
+}
+
+function buildSafePdfFileName(name?: string | null) {
+  const safe = String(name || "document.pdf")
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, "-")
+    .replace(/\s+/g, " ");
+
+  if (!safe) return "document.pdf";
+  return safe.toLowerCase().endsWith(".pdf") ? safe : `${safe}.pdf`;
 }
 
 function matchesStatusFilter(
@@ -344,10 +393,14 @@ export default function BillWisePageClient({
 }: {
   type: BillWiseType;
 }) {
-  const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [mounted, setMounted] = useState(false);
+const [transactions, setTransactions] = useState<TransactionRecord[]>([]);
+const [loading, setLoading] = useState(true);
+const [filterOpen, setFilterOpen] = useState(false);
+const [pdfActionModal, setPdfActionModal] = useState<PdfActionModalState>({
+  open: false,
+  target: null,
+});
+const [mounted, setMounted] = useState(false);
 
   const fyRange = getCurrentFyRange();
 const resolvedPartyId = useMemo(() => getLoggedInPartyId(), []);
@@ -373,7 +426,9 @@ partyId: "CURRENT_USER",
     setMounted(true);
   }, []);
 useEffect(() => {
-  if (!filterOpen) {
+  const shouldLock = filterOpen || pdfActionModal.open;
+
+  if (!shouldLock) {
     document.body.style.overflow = "";
     document.documentElement.style.overflow = "";
     return;
@@ -386,7 +441,7 @@ useEffect(() => {
     document.body.style.overflow = "";
     document.documentElement.style.overflow = "";
   };
-}, [filterOpen]);
+}, [filterOpen, pdfActionModal.open]);
   async function loadData() {
     try {
       setLoading(true);
@@ -791,7 +846,7 @@ function applyFilters() {
   setFilterOpen(false);
 }
 
-  function resetDraftFilters() {
+function resetDraftFilters() {
   const fy = getCurrentFyRange();
   const defaultStatus = getDefaultStatus(type);
   const needsDate =
@@ -810,34 +865,93 @@ function applyFilters() {
   }));
 }
 
-  function handleExportPdf() {
-   if (!resolvedPartyId || !filters.dateFrom || !filters.dateTo) return;
+function openPdfActionModal(target: PdfActionTarget) {
+  setPdfActionModal({
+    open: true,
+    target,
+  });
+}
 
-const params = new URLSearchParams({
-  partyId: resolvedPartyId,
-  from: filters.dateFrom,
-  to: filters.dateTo,
-});
+function closePdfActionModal() {
+  setPdfActionModal({
+    open: false,
+    target: null,
+  });
+}
 
-    if (type === "receivable") params.append("mode", "RECEIVABLE_FROM_YOU");
-    if (type === "payable") params.append("mode", "PAYABLE_TO_YOU");
-    if (type === "unraised") params.append("mode", "ADVANCE_RECEIVED");
-    if (type === "unreceived") params.append("mode", "ADVANCE_ISSUED");
+function handlePdfView() {
+  if (!pdfActionModal.target?.url) return;
+  openUrlInNewTab(pdfActionModal.target.url);
+  closePdfActionModal();
+}
 
-    if (type !== "on-account") {
-      params.append("status", filters.status.toUpperCase());
-    }
+async function handlePdfDownload() {
+  if (!pdfActionModal.target?.url) return;
 
-    const endpoint =
-      type === "on-account"
-        ? "/transactions/reports/on-account/pdf"
-        : "/transactions/reports/bill-wise/pdf";
+  await downloadFileFromUrl(
+    pdfActionModal.target.url,
+    pdfActionModal.target.fileName,
+  );
 
-    window.open(
-      `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}?${params.toString()}`,
-      "_blank",
-    );
+  closePdfActionModal();
+}
+
+function openAttachmentAction(
+  attachment?: TransactionAttachmentRecord | null,
+  label?: string | null,
+) {
+  if (!attachment?.fileUrl) return;
+
+  openPdfActionModal({
+    url: attachment.fileUrl,
+    title: label ? `Reference ${label}` : "Attachment PDF",
+    fileName: buildSafePdfFileName(
+      label ? `Reference-${label}` : "attachment.pdf",
+    ),
+  });
+}
+
+function handleExportPdf() {
+  const needsDate =
+    type === "on-account" ||
+    filters.status === "settled" ||
+    filters.status === "adjusted";
+
+  if (!resolvedPartyId) return;
+  if (needsDate && (!filters.dateFrom || !filters.dateTo)) return;
+
+  const params = new URLSearchParams({
+    partyId: resolvedPartyId,
+  });
+
+  if (needsDate) {
+    params.append("from", filters.dateFrom);
+    params.append("to", filters.dateTo);
   }
+
+  if (type === "receivable") params.append("mode", "RECEIVABLE_FROM_YOU");
+  if (type === "payable") params.append("mode", "PAYABLE_TO_YOU");
+  if (type === "unraised") params.append("mode", "ADVANCE_RECEIVED");
+  if (type === "unreceived") params.append("mode", "ADVANCE_ISSUED");
+  if (type === "on-account") params.append("mode", "ON_ACCOUNT");
+
+  if (type !== "on-account") {
+    params.append("status", filters.status.toUpperCase());
+  }
+
+  const endpoint =
+    type === "on-account"
+      ? "/transactions/reports/on-account/pdf"
+      : "/transactions/reports/bill-wise/pdf";
+
+  openPdfActionModal({
+    url: `${process.env.NEXT_PUBLIC_API_BASE_URL}${endpoint}?${params.toString()}`,
+    title: `${getPageTitle(type)} PDF`,
+    fileName: buildSafePdfFileName(
+      `${getPageTitle(type)}${needsDate ? ` ${filters.dateFrom} to ${filters.dateTo}` : ""}.pdf`,
+    ),
+  });
+}
 
   return (
     <div className="space-y-4 sm:space-y-5">
@@ -940,7 +1054,7 @@ const params = new URLSearchParams({
         onClick={handleExportPdf}
         className="inline-flex h-12 items-center gap-2 rounded-2xl border border-violet-100 bg-white/90 px-4 text-sm font-semibold text-slate-700 shadow-[0_8px_20px_rgba(15,23,42,0.03)] transition-all duration-200 hover:-translate-y-[1px] hover:border-violet-200 hover:bg-violet-50/60"
       >
-        <FileDown className="h-4 w-4" />
+        <FileText className="h-4 w-4" />
         Export PDF
       </button>
 
@@ -1033,7 +1147,7 @@ const params = new URLSearchParams({
               onClick={handleExportPdf}
              className="inline-flex h-11 items-center justify-center gap-2 rounded-[18px] border border-violet-100 bg-white/92 px-3 text-sm font-semibold text-slate-700 shadow-[0_10px_24px_rgba(15,23,42,0.05)] transition-all duration-200 active:scale-[0.99]"
             >
-              <FileDown className="h-4 w-4" />
+              <FileText className="h-4 w-4" />
               Export PDF
             </button>
           </div>
@@ -1125,16 +1239,16 @@ const params = new URLSearchParams({
 
                           <td className="px-4 py-3 align-top text-sm font-medium">
                             {row.attachments?.[0]?.fileUrl ? (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  openAttachmentInNewTab(row.attachments[0])
-                                }
-                                className="font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
-                                title="Open voucher attachment"
-                              >
-                                {row.voucherNo || "—"}
-                              </button>
+                             <button
+  type="button"
+  onClick={() =>
+    openAttachmentAction(row.attachments[0], row.voucherNo)
+  }
+  className="font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
+  title="Reference options"
+>
+  {row.voucherNo || "—"}
+</button>
                             ) : (
                               <span className="text-slate-900">
                                 {row.voucherNo || "—"}
@@ -1179,10 +1293,11 @@ const params = new URLSearchParams({
 
                     <tbody>
                       {filteredRows.map((row, index) => (
-                       <ReportTableRow
+<ReportTableRow
   key={row.id}
   row={row}
   bordered
+  onOpenAttachment={openAttachmentAction}
 />
                       ))}
                     </tbody>
@@ -1229,12 +1344,14 @@ const params = new URLSearchParams({
           <span>•</span>
           {row.attachments?.[0]?.fileUrl ? (
             <button
-              type="button"
-              onClick={() => openAttachmentInNewTab(row.attachments[0])}
-              className="font-semibold text-violet-700 underline-offset-4 hover:underline"
-            >
-              {row.refNo || row.voucherNo || "—"}
-            </button>
+  type="button"
+  onClick={() =>
+    openAttachmentAction(row.attachments[0], row.refNo || row.voucherNo)
+  }
+  className="font-semibold text-violet-700 underline-offset-4 hover:underline"
+>
+  {row.refNo || row.voucherNo || "—"}
+</button>
           ) : (
             <span>{row.refNo || row.voucherNo || "—"}</span>
           )}
@@ -1252,15 +1369,17 @@ const params = new URLSearchParams({
           </p>
         )}
 
-        {row.attachments?.[0]?.fileUrl ? (
-          <button
-            type="button"
-            onClick={() => openAttachmentInNewTab(row.attachments[0])}
-            className="mt-1 text-[11px] font-semibold text-violet-700 underline-offset-4 hover:underline"
-          >
-            Open
-          </button>
-        ) : null}
+      {row.attachments?.[0]?.fileUrl ? (
+  <button
+    type="button"
+    onClick={() =>
+      openAttachmentAction(row.attachments[0], row.refNo || row.voucherNo)
+    }
+    className="mt-1 text-[11px] font-semibold text-violet-700 underline-offset-4 hover:underline"
+  >
+    View / Download
+  </button>
+) : null}
       </td>
     </tr>
   ))}
@@ -1284,11 +1403,12 @@ const params = new URLSearchParams({
 </thead>
 <tbody>
   {filteredRows.map((row, index) => (
-    <UserMobileBillWiseRow
-      key={row.id}
-      row={row}
-      bordered={index !== 0}
-    />
+  <UserMobileBillWiseRow
+  key={row.id}
+  row={row}
+  bordered={index !== 0}
+  onOpenAttachment={openAttachmentAction}
+/>
   ))}
 </tbody>
                   </table>
@@ -1495,6 +1615,163 @@ style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
             </AnimatePresence>,
             document.body,
           )}
+          {mounted && pdfActionModal.open && pdfActionModal.target
+  ? createPortal(
+      <AnimatePresence>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.18 }}
+          className="fixed inset-0 z-[150] bg-[rgba(15,23,42,0.34)] backdrop-blur-[6px]"
+          onClick={closePdfActionModal}
+        >
+          <div className="hidden min-h-screen items-center justify-center p-4 sm:flex">
+            <motion.div
+              initial={{ opacity: 0, y: 22, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 18, scale: 0.98 }}
+              transition={{ duration: 0.24, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-[430px] overflow-hidden rounded-[28px] border border-violet-100 bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(250,245,255,0.98))] shadow-[0_26px_70px_rgba(124,58,237,0.18)]"
+            >
+              <div className="border-b border-violet-100 bg-[linear-gradient(135deg,rgba(168,85,247,0.08),rgba(124,58,237,0.06),rgba(236,72,153,0.05))] px-5 py-5">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-700">
+                      PDF Action
+                    </p>
+                    <h3 className="mt-2 text-xl font-semibold text-slate-900">
+                      {pdfActionModal.target.title}
+                    </h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-500">
+                      Choose how you want to continue with this PDF.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={closePdfActionModal}
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-50"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div className="space-y-3 px-5 py-5">
+                <button
+                  type="button"
+                  onClick={handlePdfView}
+                  className="flex w-full items-center justify-between rounded-[22px] border border-violet-100 bg-white px-4 py-4 text-left transition hover:border-violet-200 hover:bg-violet-50/60"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">View</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Open the PDF in a new browser tab.
+                    </p>
+                  </div>
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+                    <Eye className="h-5 w-5" />
+                  </span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handlePdfDownload}
+                  className="flex w-full items-center justify-between rounded-[22px] border border-violet-100 bg-white px-4 py-4 text-left transition hover:border-violet-200 hover:bg-violet-50/60"
+                >
+                  <div>
+                    <p className="text-sm font-semibold text-slate-900">Download</p>
+                    <p className="mt-1 text-xs text-slate-500">
+                      Download directly to this device without opening it.
+                    </p>
+                  </div>
+                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+                    <Download className="h-5 w-5" />
+                  </span>
+                </button>
+              </div>
+            </motion.div>
+          </div>
+
+          <div className="sm:hidden">
+            <motion.div
+              initial={{ opacity: 0, y: 60 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 60 }}
+              transition={{ duration: 0.24, ease: "easeOut" }}
+              onClick={(e) => e.stopPropagation()}
+              className="fixed inset-x-0 bottom-0 overflow-hidden rounded-t-[28px] border-t border-violet-100 bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(250,245,255,0.98))] shadow-[0_-18px_50px_rgba(124,58,237,0.16)]"
+            >
+              <div className="flex justify-center pt-3">
+                <div className="h-1.5 w-12 rounded-full bg-slate-300" />
+              </div>
+
+              <div className="px-4 pb-6 pt-4">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-violet-700">
+                      PDF Action
+                    </p>
+                    <h3 className="mt-2 text-[1.1rem] font-semibold text-slate-900">
+                      {pdfActionModal.target.title}
+                    </h3>
+                    <p className="mt-2 text-[13px] leading-5 text-slate-500">
+                      Choose how you want to continue with this PDF.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={closePdfActionModal}
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+
+                <div className="mt-4 grid grid-cols-1 gap-3">
+                  <button
+                    type="button"
+                    onClick={handlePdfView}
+                    className="flex w-full items-center justify-between rounded-[22px] border border-violet-100 bg-white px-4 py-4 text-left"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">View</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Open the PDF in a new browser tab.
+                      </p>
+                    </div>
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+                      <Eye className="h-5 w-5" />
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handlePdfDownload}
+                    className="flex w-full items-center justify-between rounded-[22px] border border-violet-100 bg-white px-4 py-4 text-left"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold text-slate-900">Download</p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Download directly to this device without opening it.
+                      </p>
+                    </div>
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+                      <Download className="h-5 w-5" />
+                    </span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+      </AnimatePresence>,
+      document.body,
+    )
+  : null}
       </motion.div>
     </div>
   );
@@ -1561,9 +1838,14 @@ function EmptyState({
 function ReportTableRow({
   row,
   bordered,
+  onOpenAttachment,
 }: {
   row: ReportRow;
   bordered: boolean;
+  onOpenAttachment: (
+    attachment?: TransactionAttachmentRecord | null,
+    label?: string | null,
+  ) => void;
 }) {
   const [settlementOpen, setSettlementOpen] = useState(false);
 
@@ -1582,14 +1864,14 @@ function ReportTableRow({
 
         <td className="px-4 py-3 align-top text-sm font-medium">
           {row.attachments?.[0]?.fileUrl ? (
-            <button
-              type="button"
-              onClick={() => openAttachmentInNewTab(row.attachments[0])}
-              className="cursor-pointer font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
-              title="Open voucher attachment"
-            >
-              {row.refNo || "—"}
-            </button>
+           <button
+  type="button"
+  onClick={() => onOpenAttachment(row.attachments[0], row.refNo)}
+  className="cursor-pointer font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
+  title="Reference options"
+>
+  {row.refNo || "—"}
+</button>
           ) : (
             <span className="text-slate-900">{row.refNo || "—"}</span>
           )}
@@ -1634,21 +1916,27 @@ function ReportTableRow({
         </td>
       </tr>
 
-      {settlementOpen ? (
-        <SettlementDetailsModal
-          row={row}
-          onClose={() => setSettlementOpen(false)}
-        />
-      ) : null}
+    {settlementOpen ? (
+  <SettlementDetailsModal
+    row={row}
+    onClose={() => setSettlementOpen(false)}
+    onOpenAttachment={onOpenAttachment}
+  />
+) : null}
     </>
   );
 }
 function UserMobileBillWiseRow({
   row,
   bordered,
+  onOpenAttachment,
 }: {
   row: ReportRow;
   bordered: boolean;
+  onOpenAttachment: (
+    attachment?: TransactionAttachmentRecord | null,
+    label?: string | null,
+  ) => void;
 }) {
   const [settlementOpen, setSettlementOpen] = useState(false);
 
@@ -1673,12 +1961,12 @@ function UserMobileBillWiseRow({
           <div className="mt-1 flex flex-wrap items-center gap-1 text-[11px] leading-4 text-slate-500">
             {row.attachments?.[0]?.fileUrl ? (
               <button
-                type="button"
-                onClick={() => openAttachmentInNewTab(row.attachments[0])}
-                className="font-semibold text-violet-700 underline-offset-4 hover:underline"
-              >
-                {row.refNo || "—"}
-              </button>
+  type="button"
+  onClick={() => onOpenAttachment(row.attachments[0], row.refNo)}
+  className="font-semibold text-violet-700 underline-offset-4 hover:underline"
+>
+  {row.refNo || "—"}
+</button>
             ) : (
               <span>{row.refNo || "—"}</span>
             )}
@@ -1713,21 +2001,27 @@ function UserMobileBillWiseRow({
         </td>
       </tr>
 
-      {settlementOpen ? (
-        <SettlementDetailsModal
-          row={row}
-          onClose={() => setSettlementOpen(false)}
-        />
-      ) : null}
+     {settlementOpen ? (
+  <SettlementDetailsModal
+    row={row}
+    onClose={() => setSettlementOpen(false)}
+    onOpenAttachment={onOpenAttachment}
+  />
+) : null}
     </>
   );
 }
 function SettlementDetailsModal({
   row,
   onClose,
+  onOpenAttachment,
 }: {
   row: ReportRow;
   onClose: () => void;
+  onOpenAttachment: (
+    attachment?: TransactionAttachmentRecord | null,
+    label?: string | null,
+  ) => void;
 }) {
   return createPortal(
     <div className="fixed inset-0 z-[400] flex items-end justify-center bg-black/30 p-2 backdrop-blur-sm sm:items-center sm:p-4">
@@ -1818,12 +2112,17 @@ function SettlementDetailsModal({
                       <td className="px-4 py-3 text-center">
                         {openAttachment ? (
                           <button
-                            type="button"
-                            onClick={() => openAttachmentInNewTab(openTarget)}
-                            className="text-sm font-semibold text-violet-700 underline-offset-4 hover:underline"
-                          >
-                            Open
-                          </button>
+  type="button"
+  onClick={() =>
+    onOpenAttachment(
+      openTarget,
+      settlementTxn?.voucherNo || item.refNo || row.refNo,
+    )
+  }
+  className="text-sm font-semibold text-violet-700 underline-offset-4 hover:underline"
+>
+  View / Download
+</button>
                         ) : (
                           <span className="text-sm text-slate-400">—</span>
                         )}
@@ -1888,15 +2187,20 @@ function SettlementDetailsModal({
                             {voucherLabel}
                           </p>
 
-                          {hasOpen ? (
-                            <button
-                              type="button"
-                              onClick={() => openAttachmentInNewTab(openTarget)}
-                              className="text-[11px] font-semibold leading-4 text-cyan-700 underline-offset-4 hover:underline"
-                            >
-                              Open Attachment
-                            </button>
-                          ) : null}
+                         {hasOpen ? (
+  <button
+    type="button"
+    onClick={() =>
+      onOpenAttachment(
+        openTarget,
+        settlementTxn?.voucherNo || item.refNo || row.refNo,
+      )
+    }
+    className="text-[11px] font-semibold leading-4 text-violet-700 underline-offset-4 hover:underline"
+  >
+    View / Download
+  </button>
+) : null}
                         </div>
                       </td>
 
@@ -1924,9 +2228,14 @@ function SettlementDetailsModal({
 function RowActionMenu({
   row,
   compact = false,
+  onOpenAttachment,
 }: {
   row: ReportRow;
   compact?: boolean;
+  onOpenAttachment: (
+    attachment?: TransactionAttachmentRecord | null,
+    label?: string | null,
+  ) => void;
 }) {
   const [settlementOpen, setSettlementOpen] = useState(false);
   const [open, setOpen] = useState(false);
@@ -1994,6 +2303,10 @@ function RowActionMenu({
     };
   }, [open, row.settlementRows.length]);
 
+  function openAttachmentInNewTab(arg0: TransactionAttachmentRecord | undefined): void {
+    throw new Error("Function not implemented.");
+  }
+
   return (
     <>
       <button
@@ -2027,13 +2340,13 @@ function RowActionMenu({
             className="rounded-2xl border border-violet-100 bg-[linear-gradient(180deg,rgba(255,255,255,1),rgba(250,245,255,0.96))] p-2 shadow-[0_22px_50px_rgba(124,58,237,0.16)]"
           >
             <MenuButton
-              label="Open Attachment"
-              disabled={!row.attachments.length}
-              onClick={() => {
-                setOpen(false);
-                openAttachmentInNewTab(row.attachments[0]);
-              }}
-            />
+  label="View / Download"
+  disabled={!row.attachments.length}
+  onClick={() => {
+    setOpen(false);
+    onOpenAttachment(row.attachments[0], row.refNo || row.voucherNo);
+  }}
+/>
 
 {row.settlementRows.length > 0 ? (
   <button
