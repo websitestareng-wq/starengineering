@@ -35,6 +35,7 @@ type StatusFilter = "pending" | "settled" | "adjusted";
 
 type PdfActionTarget = {
   url: string;
+  downloadUrl?: string;
   fileName: string;
   title: string;
 };
@@ -903,24 +904,31 @@ function handlePdfView() {
 }
 
 async function handlePdfDownload() {
-  if (!pdfActionModal.target?.url) return;
+  const targetUrl =
+    pdfActionModal.target?.downloadUrl || pdfActionModal.target?.url;
+
+  if (!targetUrl) return;
 
   await downloadFileFromUrl(
-    pdfActionModal.target.url,
-    pdfActionModal.target.fileName,
+    targetUrl,
+    pdfActionModal.target?.fileName || "document.pdf",
   );
 
   closePdfActionModal();
 }
 
 function openAttachmentAction(
+  transactionId?: string | null,
   attachment?: TransactionAttachmentRecord | null,
   label?: string | null,
 ) {
-  if (!attachment?.fileUrl) return;
+  if (!attachment?.fileUrl || !transactionId) return;
+
+  const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 
   openPdfActionModal({
     url: attachment.fileUrl,
+    downloadUrl: `${apiBase}/transactions/${transactionId}/download`,
     title: label ? `Reference ${label}` : "Attachment PDF",
     fileName: buildSafePdfFileName(
       label ? `Reference-${label}` : "attachment.pdf",
@@ -1285,9 +1293,9 @@ return (
                             {row.attachments?.[0]?.fileUrl ? (
                               <button
   type="button"
-  onClick={() =>
-    openAttachmentAction(row.attachments[0], row.voucherNo)
-  }
+ onClick={() =>
+  openAttachmentAction(row.transactionId, row.attachments[0], row.voucherNo)
+}
   className="font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
   title="Reference options"
 >
@@ -1389,9 +1397,13 @@ return (
           {row.attachments?.[0]?.fileUrl ? (
             <button
   type="button"
-  onClick={() =>
-    openAttachmentAction(row.attachments[0], row.refNo || row.voucherNo)
-  }
+ onClick={() =>
+  openAttachmentAction(
+    row.transactionId,
+    row.attachments[0],
+    row.refNo || row.voucherNo,
+  )
+}
   className="font-semibold text-violet-700 underline-offset-4 hover:underline"
 >
   {row.refNo || row.voucherNo || "—"}
@@ -1417,8 +1429,12 @@ return (
   <button
     type="button"
     onClick={() =>
-      openAttachmentAction(row.attachments[0], row.refNo || row.voucherNo)
-    }
+  openAttachmentAction(
+    row.transactionId,
+    row.attachments[0],
+    row.refNo || row.voucherNo,
+  )
+}
     className="mt-1 text-[11px] font-semibold text-violet-700 underline-offset-4 hover:underline"
   >
     View / Download
@@ -1910,10 +1926,11 @@ function ReportTableRow({
 }: {
   row: ReportRow;
   bordered: boolean;
-  onOpenAttachment: (
-    attachment?: TransactionAttachmentRecord | null,
-    label?: string | null,
-  ) => void;
+onOpenAttachment: (
+  transactionId?: string | null,
+  attachment?: TransactionAttachmentRecord | null,
+  label?: string | null,
+) => void;
 }) {
   const [settlementOpen, setSettlementOpen] = useState(false);
 
@@ -1934,7 +1951,9 @@ function ReportTableRow({
   {row.attachments?.[0]?.fileUrl ? (
     <button
       type="button"
-      onClick={() => onOpenAttachment(row.attachments[0], row.refNo)}
+      onClick={() =>
+  onOpenAttachment(row.transactionId, row.attachments[0], row.refNo)
+}
       className="cursor-pointer font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
       title="Reference options"
     >
@@ -2001,10 +2020,11 @@ function AdminMobileBillWiseRow({
 }: {
   row: ReportRow;
   bordered: boolean;
-  onOpenAttachment: (
-    attachment?: TransactionAttachmentRecord | null,
-    label?: string | null,
-  ) => void;
+onOpenAttachment: (
+  transactionId?: string | null,
+  attachment?: TransactionAttachmentRecord | null,
+  label?: string | null,
+) => void;
 }) {
   const [settlementOpen, setSettlementOpen] = useState(false);
 
@@ -2030,7 +2050,11 @@ function AdminMobileBillWiseRow({
             {row.attachments?.[0]?.fileUrl ? (
              <button
   type="button"
-  onClick={() => onOpenAttachment(row.attachments[0], row.refNo)}
+  onClick={() => onOpenAttachment(
+  row.transactionId,
+  row.attachments[0],
+  row.refNo || row.voucherNo,
+)}
   className="font-semibold text-violet-700 underline-offset-4 hover:underline"
 >
   {row.refNo || "—"}
@@ -2086,10 +2110,11 @@ function SettlementDetailsModal({
 }: {
   row: ReportRow;
   onClose: () => void;
-  onOpenAttachment: (
-    attachment?: TransactionAttachmentRecord | null,
-    label?: string | null,
-  ) => void;
+ onOpenAttachment: (
+  transactionId?: string | null,
+  attachment?: TransactionAttachmentRecord | null,
+  label?: string | null,
+) => void;
 }) {
   return createPortal(
     <div className="fixed inset-0 z-[400] flex items-end justify-center bg-black/30 p-2 backdrop-blur-sm sm:items-center sm:p-4">
@@ -2182,11 +2207,12 @@ function SettlementDetailsModal({
                           <button
   type="button"
   onClick={() =>
-    onOpenAttachment(
-      openTarget,
-      settlementTxn?.voucherNo || item.refNo || row.refNo,
-    )
-  }
+  onOpenAttachment(
+    settlementTxn?.id,
+    openTarget,
+    settlementTxn?.voucherNo || item.refNo || row.refNo,
+  )
+}
   className="text-sm font-semibold text-violet-700 underline-offset-4 hover:underline"
 >
   View / Download

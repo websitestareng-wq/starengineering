@@ -50,6 +50,7 @@ type LedgerFilters = {
 
 type PdfActionTarget = {
   url: string;
+  downloadUrl?: string;
   fileName: string;
   title: string;
 };
@@ -204,18 +205,8 @@ async function downloadFileFromUrl(
     window.setTimeout(() => {
       window.URL.revokeObjectURL(blobUrl);
     }, 1500);
-  } catch (error) {
-    console.error("Download failed, falling back to direct link:", error);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = safeFileName;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+   } catch (error) {
+    console.error("Download failed:", error);
   }
 }
 
@@ -561,24 +552,31 @@ function handlePdfView() {
 }
 
 async function handlePdfDownload() {
-  if (!pdfActionModal.target?.url) return;
+  const targetUrl =
+    pdfActionModal.target?.downloadUrl || pdfActionModal.target?.url;
+
+  if (!targetUrl) return;
 
   await downloadFileFromUrl(
-    pdfActionModal.target.url,
-    pdfActionModal.target.fileName,
+    targetUrl,
+    pdfActionModal.target?.fileName || "document.pdf",
   );
 
   closePdfActionModal();
 }
 
 function openVoucherAttachmentAction(
+  transactionId?: string | null,
   attachment?: TransactionAttachmentRecord | null,
   voucherNo?: string | null,
 ) {
-  if (!attachment?.fileUrl) return;
+  if (!attachment?.fileUrl || !transactionId) return;
+
+  const apiBase = (process.env.NEXT_PUBLIC_API_BASE_URL || "").replace(/\/$/, "");
 
   openPdfActionModal({
     url: attachment.fileUrl,
+    downloadUrl: `${apiBase}/transactions/${transactionId}/download`,
     title: voucherNo ? `Voucher ${voucherNo}` : "Voucher Attachment",
     fileName: buildSafePdfFileName(
       voucherNo ? `Voucher-${voucherNo}` : "voucher-attachment.pdf",
@@ -895,9 +893,13 @@ function exportPdf() {
   {row.attachments?.[0]?.fileUrl ? (
     <button
       type="button"
-      onClick={() =>
-        openVoucherAttachmentAction(row.attachments[0], row.voucherNo)
-      }
+     onClick={() =>
+  openVoucherAttachmentAction(
+    row.transactionId,
+    row.attachments[0],
+    row.voucherNo,
+  )
+}
       className="cursor-pointer font-semibold text-violet-700 underline-offset-4 transition hover:text-fuchsia-700 hover:underline"
       title="Voucher options"
     >
@@ -977,9 +979,13 @@ function exportPdf() {
         {row.attachments?.[0]?.fileUrl ? (
   <button
     type="button"
-    onClick={() =>
-      openVoucherAttachmentAction(row.attachments[0], row.voucherNo)
-    }
+   onClick={() =>
+  openVoucherAttachmentAction(
+    row.transactionId,
+    row.attachments[0],
+    row.voucherNo,
+  )
+}
     className="cursor-pointer font-semibold text-violet-700 underline-offset-4 hover:underline"
   >
     {row.voucherNo || "—"}
