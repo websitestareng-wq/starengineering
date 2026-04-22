@@ -271,17 +271,7 @@ async function downloadFileFromUrl(
       window.URL.revokeObjectURL(blobUrl);
     }, 1500);
   } catch (error) {
-    console.error("Download failed, falling back to direct link:", error);
-
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = safeFileName;
-    a.target = "_blank";
-    a.rel = "noopener noreferrer";
-    a.style.display = "none";
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    console.error("Download failed:", error);
   }
 }
 
@@ -2286,9 +2276,10 @@ function SettlementDetailsModal({
     type="button"
     onClick={() =>
       onOpenAttachment(
-        openTarget,
-        settlementTxn?.voucherNo || item.refNo || row.refNo,
-      )
+  settlementTxn?.id,
+  openTarget,
+  settlementTxn?.voucherNo || item.refNo || row.refNo,
+)
     }
     className="text-[11px] font-semibold leading-4 text-violet-700 underline-offset-4 hover:underline"
   >
