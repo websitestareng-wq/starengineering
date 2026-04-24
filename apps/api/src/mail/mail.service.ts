@@ -49,7 +49,7 @@ export class MailService {
     await this.resend.emails.send({
       from: "STAR ENGINEERING <noreply@mail.stareng.co.in>",
       to: input.to,
-      subject: "STAR ENGINEERING Credentials",
+      subject: "Your Login Credentials",
       html,
     });
   }
