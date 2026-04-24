@@ -298,6 +298,7 @@ const [pdfActionModal, setPdfActionModal] = useState<PdfActionModalState>({
   open: false,
   target: null,
 });
+const [pdfDownloading, setPdfDownloading] = useState(false);
 const [mounted, setMounted] = useState(false);
 const [loggedInUser, setLoggedInUser] = useState<ReturnType<typeof getLoggedInUser>>(null);
 
@@ -532,14 +533,19 @@ async function handlePdfDownload() {
   const targetUrl =
     pdfActionModal.target?.downloadUrl || pdfActionModal.target?.url;
 
-  if (!targetUrl) return;
+  if (!targetUrl || pdfDownloading) return;
 
-  await downloadFileFromUrl(
-    targetUrl,
-    pdfActionModal.target?.fileName || "document.pdf",
-  );
+  try {
+    setPdfDownloading(true);
 
-  closePdfActionModal();
+    await downloadFileFromUrl(
+      targetUrl,
+      pdfActionModal.target?.fileName || "document.pdf",
+    );
+  } finally {
+    setPdfDownloading(false);
+    closePdfActionModal();
+  }
 }
 
 function openVoucherAttachmentAction(
@@ -1230,21 +1236,29 @@ onChange={(e) => {
                   </span>
                 </button>
 
-                <button
-                  type="button"
-                  onClick={handlePdfDownload}
-                  className="flex w-full items-center justify-between rounded-[22px] border border-violet-100 bg-white px-4 py-4 text-left transition hover:border-violet-200 hover:bg-violet-50/60"
-                >
-                  <div>
-                    <p className="text-sm font-semibold text-slate-900">Download</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Download directly to this device without opening it.
-                    </p>
-                  </div>
-                  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
-                    <Download className="h-5 w-5" />
-                  </span>
-                </button>
+               <button
+  type="button"
+  onClick={handlePdfDownload}
+  disabled={pdfDownloading}
+  className="flex w-full items-center justify-between rounded-[22px] border border-violet-100 bg-white px-4 py-4 text-left transition hover:border-violet-200 hover:bg-violet-50/60 disabled:cursor-not-allowed disabled:opacity-60"
+>
+  <div>
+    <p className="text-sm font-semibold text-slate-900">
+      {pdfDownloading ? "Downloading..." : "Download"}
+    </p>
+    <p className="mt-1 text-xs text-slate-500">
+      Download directly to this device without opening it.
+    </p>
+  </div>
+
+  <span className="inline-flex h-11 w-11 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+    {pdfDownloading ? (
+      <Loader2 className="h-5 w-5 animate-spin" />
+    ) : (
+      <Download className="h-5 w-5" />
+    )}
+  </span>
+</button>
               </div>
             </motion.div>
           </div>
@@ -1303,20 +1317,28 @@ onChange={(e) => {
                   </button>
 
                   <button
-                    type="button"
-                    onClick={handlePdfDownload}
-                    className="flex w-full items-center justify-between rounded-[22px] border border-violet-100 bg-white px-4 py-4 text-left"
-                  >
-                    <div>
-                      <p className="text-sm font-semibold text-slate-900">Download</p>
-                      <p className="mt-1 text-xs text-slate-500">
-                        Download directly to this device without opening it.
-                      </p>
-                    </div>
-                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
-                      <Download className="h-5 w-5" />
-                    </span>
-                  </button>
+  type="button"
+  onClick={handlePdfDownload}
+  disabled={pdfDownloading}
+  className="flex w-full items-center justify-between rounded-[22px] border border-violet-100 bg-white px-4 py-4 text-left disabled:cursor-not-allowed disabled:opacity-60"
+>
+  <div>
+    <p className="text-sm font-semibold text-slate-900">
+      {pdfDownloading ? "Downloading..." : "Download"}
+    </p>
+    <p className="mt-1 text-xs text-slate-500">
+      Download directly to this device without opening it.
+    </p>
+  </div>
+
+  <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-violet-50 text-violet-700">
+    {pdfDownloading ? (
+      <Loader2 className="h-5 w-5 animate-spin" />
+    ) : (
+      <Download className="h-5 w-5" />
+    )}
+  </span>
+</button>
                 </div>
               </div>
             </motion.div>
