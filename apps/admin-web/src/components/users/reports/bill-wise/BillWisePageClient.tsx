@@ -1665,7 +1665,7 @@ style={{ WebkitOverflowScrolling: "touch", overscrollBehavior: "contain" }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.18 }}
-          className="fixed inset-0 z-[150] bg-[rgba(15,23,42,0.34)] backdrop-blur-[6px]"
+         className="fixed inset-0 z-[9999] bg-[rgba(15,23,42,0.34)] backdrop-blur-[6px]"
           onClick={closePdfActionModal}
         >
           <div className="hidden min-h-screen items-center justify-center p-4 sm:flex">
