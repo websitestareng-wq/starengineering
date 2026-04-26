@@ -1,5 +1,5 @@
 "use client";
-
+import { apiRequest } from "@/lib/api-client";
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
@@ -372,15 +372,7 @@ const loadReminders = async (showLoader = false) => {
       setIsRefreshing(true);
     }
 
-    const res = await fetch("http://localhost:3001/reminders", {
-      cache: "no-store",
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch reminders");
-    }
-
-    const data = await res.json();
+   const data = await apiRequest<ReminderItem[]>("/reminders");
     setItems(sortItems(data));
   } catch (e) {
     setItems([]);
@@ -480,23 +472,13 @@ const saveReminder = async () => {
       emailEnabled: form.emailEnabled,
     };
 
-    const url = isEdit
-      ? `http://localhost:3001/reminders/${form.id}`
-      : "http://localhost:3001/reminders";
-
-    const method = isEdit ? "PATCH" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    });
-
-    if (!res.ok) {
-      throw new Error(`Failed to ${actionLabel} reminder`);
-    }
+    await apiRequest(
+  isEdit ? `/reminders/${form.id}` : "/reminders",
+  {
+    method: isEdit ? "PATCH" : "POST",
+    body: JSON.stringify(payload),
+  },
+);
 
     closeModal();
     await loadReminders(true);
@@ -519,13 +501,10 @@ const markCompleted = async (id: string) => {
   if (!ok) return;
 
   try {
-    const res = await fetch(`http://localhost:3001/reminders/${id}/complete`, {
-      method: "PATCH",
-    });
+    const res = await apiRequest(`/reminders/${id}/complete`, {
+  method: "PATCH",
+});
 
-    if (!res.ok) {
-      throw new Error("Failed to mark reminder as completed");
-    }
 
     await loadReminders(true);
   } catch (error) {
@@ -538,13 +517,10 @@ const markActive = async (id: string) => {
   if (!ok) return;
 
   try {
-    const res = await fetch(`http://localhost:3001/reminders/${id}/active`, {
-      method: "PATCH",
-    });
+    const res = await apiRequest(`/reminders/${id}/active`, {
+  method: "PATCH",
+});
 
-    if (!res.ok) {
-      throw new Error("Failed to mark reminder as active");
-    }
 
     await loadReminders(true);
   } catch (error) {
@@ -557,13 +533,10 @@ const stopSeries = async (id: string) => {
   if (!ok) return;
 
   try {
-    const res = await fetch(`http://localhost:3001/reminders/${id}/stop`, {
-      method: "PATCH",
-    });
+    const res = await apiRequest(`/reminders/${id}/stop`, {
+  method: "PATCH",
+});
 
-    if (!res.ok) {
-      throw new Error("Failed to stop reminder series");
-    }
 
     await loadReminders(true);
   } catch (error) {
@@ -576,14 +549,9 @@ const deleteReminder = async (id: string) => {
   if (!ok) return;
 
   try {
-    const res = await fetch(`http://localhost:3001/reminders/${id}`, {
-      method: "DELETE",
-    });
-
-    if (!res.ok) {
-      throw new Error("Failed to delete reminder");
-    }
-
+    const res = await apiRequest(`/reminders/${id}`, {
+  method: "DELETE",
+});
     await loadReminders(true);
   } catch (error) {
     setError("Failed to delete reminder.");
