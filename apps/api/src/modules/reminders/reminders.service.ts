@@ -9,6 +9,13 @@ export class RemindersService {
     private readonly prisma: PrismaService,
     private readonly mailService: MailService,
   ) {}
+  private parseDateOnlyToISTDate(value: string | Date) {
+  if (value instanceof Date) return value;
+
+  const [year, month, day] = String(value).split("-").map(Number);
+
+  return new Date(year, month - 1, day, 12, 0, 0, 0);
+}
   private getNextWeeklyDate(currentDueDate: Date, weeklyDays: string[]) {
     if (!weeklyDays?.length) return currentDueDate;
 
@@ -38,16 +45,31 @@ export class RemindersService {
         ? nextDay - currentDay
         : 7 - currentDay + selectedDays[0];
 
-    const next = new Date(current);
-    next.setDate(current.getDate() + diff);
-    return next;
+   const next = new Date(
+  current.getFullYear(),
+  current.getMonth(),
+  current.getDate() + diff,
+  12,
+  0,
+  0,
+  0,
+);
+return next;
   }
 
   private getNextMonthlyDate(currentDueDate: Date, monthlyDay?: number | null) {
     if (!monthlyDay) return currentDueDate;
 
     const current = new Date(currentDueDate);
-    const next = new Date(current.getFullYear(), current.getMonth() + 1, monthlyDay);
+   const next = new Date(
+  current.getFullYear(),
+  current.getMonth() + 1,
+  monthlyDay,
+  12,
+  0,
+  0,
+  0,
+);
     return next;
   }
 
@@ -59,10 +81,18 @@ export class RemindersService {
     if (!yearlyMonth || !yearlyDay) return currentDueDate;
 
     const current = new Date(currentDueDate);
-    return new Date(current.getFullYear() + 1, yearlyMonth - 1, yearlyDay);
+   return new Date(
+  current.getFullYear() + 1,
+  yearlyMonth - 1,
+  yearlyDay,
+  12,
+  0,
+  0,
+  0,
+);
   }
 async create(data: any, userId?: string) {
-  const due = new Date(data.dueDate);
+  const due = this.parseDateOnlyToISTDate(data.dueDate);
 
   return this.prisma.reminder.create({
     data: {

@@ -80,24 +80,19 @@ export class MailService {
     const safeTitle = input.title?.trim() || "Reminder";
     const safeNotes = input.notes?.trim();
 
-    const text = safeNotes
-      ? `Reminder: ${safeTitle}\n\nNotes: ${safeNotes}`
-      : `Reminder: ${safeTitle}`;
+   const text = safeNotes || safeTitle;
 
-    const html = safeNotes
-      ? `
-      <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.6;">
-        <h2 style="margin: 0 0 12px;">Reminder</h2>
-        <p style="margin: 0 0 10px;"><strong>Title:</strong> ${safeTitle}</p>
-        <p style="margin: 0;"><strong>Notes:</strong> ${safeNotes}</p>
-      </div>
-    `
-      : `
-      <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.6;">
-        <h2 style="margin: 0 0 12px;">Reminder</h2>
-        <p style="margin: 0;"><strong>Title:</strong> ${safeTitle}</p>
-      </div>
-    `;
+const htmlBody = (safeNotes || safeTitle)
+  .replace(/&/g, "&amp;")
+  .replace(/</g, "&lt;")
+  .replace(/>/g, "&gt;")
+  .replace(/\n/g, "<br />");
+
+const html = `
+  <div style="font-family: Arial, sans-serif; color: #0f172a; line-height: 1.6; font-size: 15px;">
+    ${htmlBody}
+  </div>
+`;
 
     const response = await this.resend.emails.send({
       from: "STAR ENGINEERING <noreply@mail.stareng.co.in>",
