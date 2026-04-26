@@ -3,6 +3,7 @@ import {
   IsArray,
   IsBoolean,
   IsDateString,
+ValidateIf,
   IsEnum,
   IsInt,
   IsOptional,
@@ -32,23 +33,23 @@ export class CreateReminderDto {
   @IsString({ each: true })
   weeklyDays?: string[];
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(31)
-  monthlyDay?: number;
+ @ValidateIf((o) => o.monthlyDay !== null && o.monthlyDay !== undefined)
+@IsInt()
+@Min(1)
+@Max(31)
+monthlyDay?: number | null;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(12)
-  yearlyMonth?: number;
+ @ValidateIf((o) => o.yearlyMonth !== null && o.yearlyMonth !== undefined)
+@IsInt()
+@Min(1)
+@Max(12)
+yearlyMonth?: number | null;
 
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(31)
-  yearlyDay?: number;
+  @ValidateIf((o) => o.yearlyDay !== null && o.yearlyDay !== undefined)
+@IsInt()
+@Min(1)
+@Max(31)
+yearlyDay?: number | null;
 
   @IsOptional()
   @IsInt()

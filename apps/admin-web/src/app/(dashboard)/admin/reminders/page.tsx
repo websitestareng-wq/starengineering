@@ -119,7 +119,21 @@ const emptyForm: FormState = {
   notifyMinute: "00",
   emailEnabled: true,
 };
+function toDateInputValue(date: Date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
 
+  return `${year}-${month}-${day}`;
+}
+function formatDateForInput(dateString: string) {
+  if (!dateString) return "";
+
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "";
+
+  return toDateInputValue(date);
+}
 function formatDate(dateString: string) {
   if (!dateString) return "—";
   const date = new Date(dateString);
@@ -253,7 +267,7 @@ function computeDueDateFromForm(form: FormState) {
       candidate = new Date(year, month + 1, day);
     }
 
-    return candidate.toISOString().slice(0, 10);
+    return toDateInputValue(candidate);
   }
 
   if (form.type === "YEARLY") {
@@ -265,7 +279,7 @@ function computeDueDateFromForm(form: FormState) {
       candidate = new Date(year + 1, month - 1, day);
     }
 
-    return candidate.toISOString().slice(0, 10);
+    return toDateInputValue(candidate);
   }
 
   if (form.type === "WEEKLY") {
@@ -296,7 +310,7 @@ function computeDueDateFromForm(form: FormState) {
     const candidate = new Date(today);
     candidate.setDate(today.getDate() + diff);
 
-    return candidate.toISOString().slice(0, 10);
+    return toDateInputValue(candidate);
   }
 
   return "";
@@ -417,7 +431,7 @@ const loadReminders = async (showLoader = false) => {
       title: item.title,
       notes: item.notes,
       type: item.type,
-      dueDate: item.type === "ONE_TIME" ? item.dueDate : "",
+      dueDate: item.type === "ONE_TIME" ? formatDateForInput(item.dueDate) : "",
       weeklyDays: item.weeklyDays,
       monthlyDay: item.monthlyDay ? String(item.monthlyDay) : "",
       yearlyMonth: item.yearlyMonth ? String(item.yearlyMonth) : "1",
