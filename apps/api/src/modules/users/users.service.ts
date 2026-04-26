@@ -119,13 +119,11 @@ async verifyMyPassword(
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
-    sendEmail?: boolean;
   },
 ) {
     const currentPassword = dto.currentPassword?.trim();
     const newPassword = dto.newPassword?.trim();
     const confirmPassword = dto.confirmPassword?.trim();
-const sendEmail = dto.sendEmail ?? true;
     if (!currentPassword || !newPassword || !confirmPassword) {
       throw new BadRequestException("All password fields are required.");
     }
@@ -164,8 +162,8 @@ const sendEmail = dto.sendEmail ?? true;
 
     if (user.lastPasswordChangedAt) {
   const lastChangedAt = new Date(user.lastPasswordChangedAt);
-  const nextAllowedDate = new Date(lastChangedAt);
-  nextAllowedDate.setDate(nextAllowedDate.getDate() + 30);
+const nextAllowedDate = new Date(lastChangedAt);
+nextAllowedDate.setHours(nextAllowedDate.getHours() + 24);
 
   const now = new Date();
 
@@ -201,16 +199,7 @@ await this.prisma.userSession.updateMany({
     isActive: false,
   },
 });
-    // Password updated email
-    // Note: Assumes mail service method will be added next.
-   if (sendEmail && user.email) {
-  await this.mailService.sendPasswordUpdatedEmail({
-    to: user.email,
-    name: user.name,
-    email: user.email,
-    password: newPassword,
-  });
-}
+// Email disabled for privacy (no password will be sent via email)
 
     return {
       message: "Password updated successfully.",

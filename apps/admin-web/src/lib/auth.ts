@@ -97,3 +97,17 @@ export async function loginUser(
 
   return parseJson<AuthResponse>(response);
 }
+export async function recoverCredential(payload: { emailOrPhone: string }) {
+  const response = await fetch(`${API_BASE_URL}/auth/recover-credential`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    credentials: "include",
+    body: JSON.stringify({
+      emailOrPhone: payload.emailOrPhone,
+    }),
+  });
+
+  return parseJson<{ message: string }>(response);
+}

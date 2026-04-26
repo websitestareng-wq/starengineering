@@ -2,6 +2,7 @@ import { Injectable } from "@nestjs/common";
 import { Resend } from "resend";
 import { buildWelcomeCredentialsEmail } from "./templates/welcome-credentials-email";
 import { buildPasswordUpdatedEmail } from "./templates/password-updated-email";
+import { buildRecoverCredentialEmail } from "./templates/recover-credential-email";
 
 type SendWelcomeCredentialsEmailInput = {
   to: string;
@@ -19,7 +20,14 @@ type SendPasswordUpdatedEmailInput = {
   password: string;
   loginUrl?: string;
 };
-
+type SendRecoverCredentialEmailInput = {
+  to: string;
+  name: string;
+  email: string;
+  phone?: string;
+  password: string;
+  loginUrl?: string;
+};
 type SendReminderEmailInput = {
   to: string;
   title: string;
@@ -71,7 +79,24 @@ export class MailService {
       html,
     });
   }
+async sendRecoverCredentialEmail(
+  input: SendRecoverCredentialEmailInput,
+): Promise<void> {
+  const html = buildRecoverCredentialEmail({
+    userName: input.name,
+    loginEmail: input.email,
+    temporaryPassword: input.password,
+    loginUrl: input.loginUrl || "https://stareng.co.in/login",
+    phone: input.phone || "",
+  });
 
+  await this.resend.emails.send({
+    from: "STAR ENGINEERING <noreply@mail.stareng.co.in>",
+    to: input.to,
+    subject: "Temporary Password Issued – STAR ENGINEERING",
+    html,
+  });
+}
   async sendReminderEmail(
     input: SendReminderEmailInput,
   ): Promise<void> {

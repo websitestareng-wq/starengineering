@@ -42,7 +42,7 @@ export class AuthController {
   private readonly jwtService: JwtService,
 ) {}
 
-  @Post("portal/identify")
+    @Post("portal/identify")
   async identify(
     @Body()
     body: {
@@ -51,6 +51,16 @@ export class AuthController {
     },
   ) {
     return this.authService.identify(body);
+  }
+
+  @Post("recover-credential")
+  async recoverCredential(
+    @Body()
+    body: {
+      emailOrPhone: string;
+    },
+  ) {
+    return this.authService.recoverCredential(body);
   }
 
 @Post("user/login")

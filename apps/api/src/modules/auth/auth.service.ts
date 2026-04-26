@@ -9,15 +9,39 @@ import { LoginDto } from "./dto/login.dto";
 import { CaptchaService } from "../../common/services/captcha.service";
 import * as bcrypt from "bcrypt";
 import { randomUUID } from "crypto";
+import { MailService } from "../../mail/mail.service";
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly jwtService: JwtService,
-    private readonly captchaService: CaptchaService,
-  ) {}
+ constructor(
+  private readonly prisma: PrismaService,
+  private readonly jwtService: JwtService,
+  private readonly captchaService: CaptchaService,
+  private readonly mailService: MailService,
+) {}
+private generateTemporaryPassword(length = 8) {
+  const uppercase = "ABCDEFGHJKLMNPQRSTUVWXYZ";
+  const lowercase = "abcdefghijkmnopqrstuvwxyz";
+  const numbers = "23456789";
+  const symbols = "!@#%";
+  const allChars = uppercase + lowercase + numbers + symbols;
 
+  const pick = (chars: string) =>
+    chars.charAt(Math.floor(Math.random() * chars.length));
+
+  const passwordChars = [
+    pick(uppercase),
+    pick(lowercase),
+    pick(numbers),
+    pick(symbols),
+  ];
+
+  for (let i = passwordChars.length; i < length; i++) {
+    passwordChars.push(pick(allChars));
+  }
+
+  return passwordChars.join("").slice(0, length);
+}
   private async findActiveUser(emailOrPhone: string) {
     const value = emailOrPhone?.trim();
 
@@ -280,4 +304,72 @@ export class AuthService {
       },
     });
   }
+  async recoverCredential(payload: { emailOrPhone: string }) {
+  const value = payload.emailOrPhone?.trim();
+
+  if (!value) {
+    throw new BadRequestException("Email or phone is required.");
+  }
+
+  const user = await this.prisma.user.findFirst({
+    where: {
+      OR: [{ email: value }, { phone: value }],
+    },
+  });
+
+  if (!user || !user.isActive) {
+    throw new BadRequestException("No user found with provided details.");
+  }
+
+  if (!user.email) {
+    throw new BadRequestException("User email not available for recovery.");
+  }
+
+  // 🔥 24 HOURS LIMIT
+  if (user.lastCredentialRecoveredAt) {
+    const last = new Date(user.lastCredentialRecoveredAt);
+    const nextAllowed = new Date(last);
+    nextAllowed.setHours(nextAllowed.getHours() + 24);
+
+    if (new Date() < nextAllowed) {
+      throw new BadRequestException(
+        "You can request credential recovery only once every 24 hours."
+      );
+    }
+  }
+
+  const tempPassword = this.generateTemporaryPassword(8);
+  const passwordHash = await bcrypt.hash(tempPassword, 10);
+
+  await this.prisma.user.update({
+    where: { id: user.id },
+    data: {
+      passwordHash,
+      lastPasswordChangedAt: null,
+      lastCredentialRecoveredAt: new Date(),
+    },
+  });
+
+  await this.prisma.userSession.updateMany({
+    where: {
+      userId: user.id,
+      isActive: true,
+    },
+    data: {
+      isActive: false,
+    },
+  });
+
+  await this.mailService.sendRecoverCredentialEmail({
+    to: user.email,
+    name: user.name,
+    email: user.email,
+    phone: user.phone || "",
+    password: tempPassword,
+  });
+
+  return {
+    message: "Temporary password sent to your registered email.",
+  };
+}
 }

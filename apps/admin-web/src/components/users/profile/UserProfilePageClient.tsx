@@ -279,8 +279,8 @@ function getPasswordLockInfo(lastPasswordChangedAt?: string | null) {
     };
   }
 
-  const nextAllowedDate = new Date(lastChangedAt);
-  nextAllowedDate.setDate(nextAllowedDate.getDate() + 30);
+const nextAllowedDate = new Date(lastChangedAt);
+nextAllowedDate.setHours(nextAllowedDate.getHours() + 24);
 
   const now = new Date();
   const isLocked = now < nextAllowedDate;
@@ -312,7 +312,6 @@ export default function UserProfilePageClient() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordSaving, setPasswordSaving] = useState(false);
   const [passwordError, setPasswordError] = useState("");
-const [sendPasswordEmail, setSendPasswordEmail] = useState(true);
   useEffect(() => {
     void fetchProfile();
   }, []);
@@ -398,10 +397,12 @@ const [sendPasswordEmail, setSendPasswordEmail] = useState(true);
     }
   }
 
-  function openPasswordEnableConfirm() {
-  if (passwordLockInfo.isLocked) {
+function openPasswordEnableConfirm() {
+  const lockInfo = getPasswordLockInfo(data?.lastPasswordChangedAt);
+
+  if (lockInfo.isLocked) {
     setSuccessMessage(
-      `Password change is blocked for now. You can change it again on ${passwordLockInfo.nextDateLabel}.`,
+      `Password change is blocked for now. You can change it again on ${lockInfo.nextDateLabel}.`,
     );
     setModalStep("success");
     return;
@@ -474,7 +475,6 @@ async function handlePasswordSave() {
     currentPassword,
     newPassword,
     confirmPassword,
-    sendEmail: sendPasswordEmail,
   }),
 });
 
@@ -502,7 +502,6 @@ setCurrentPassword("");
 setCurrentPasswordCheck("");
 setNewPassword("");
 setConfirmPassword("");
-setSendPasswordEmail(true);
 try {
   await apiFetch("/auth/logout", {
     method: "POST",
@@ -531,7 +530,6 @@ function closeAllPasswordFlow() {
   setCurrentPasswordCheck("");
   setNewPassword("");
   setConfirmPassword("");
-  setSendPasswordEmail(true);
   setModalStep(null);
 }
 
@@ -660,7 +658,7 @@ const passwordLockInfo = getPasswordLockInfo(data?.lastPasswordChangedAt);
          <div className="mt-4 rounded-[20px] border border-amber-100 bg-amber-50/70 px-4 py-3 text-sm text-amber-800">
   {passwordLockInfo.isLocked
     ? `Password change is temporarily blocked. You can change it again on ${passwordLockInfo.nextDateLabel}.`
-    : "Password can be changed once every 30 days."}
+ : "Password can be changed once every 24 hours."}
 </div>
         </Panel>
       </div>
@@ -869,47 +867,8 @@ const passwordLockInfo = getPasswordLockInfo(data?.lastPasswordChangedAt);
         onClose={() => setModalStep("password-new")}
       >
         <div className="space-y-4">
-        <div className="space-y-4">
-  <div className="rounded-[18px] border border-amber-100 bg-amber-50/70 px-4 py-3 text-sm text-amber-800">
-    You will be given an option to choose the new password to send on your mail after updating the password.
-  </div>
-
-  <div className="rounded-[20px] border border-slate-200 bg-white p-4 shadow-[0_6px_18px_rgba(15,23,42,0.04)]">
-    <p className="text-sm font-semibold text-slate-900">
-      Do you want to send the new password to your email?
-    </p>
-    <p className="mt-1 text-xs leading-5 text-slate-500">
-      If you select "No", the new password will be updated but no email will be sent to your mail.
-    </p>
-
-    <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-      <button
-        type="button"
-        onClick={() => setSendPasswordEmail(true)}
-        className={cn(
-          "inline-flex min-h-[52px] items-center justify-center rounded-[18px] border px-4 text-sm font-semibold transition-all duration-200",
-          sendPasswordEmail
-            ? "border-emerald-300 bg-emerald-50 text-emerald-700 shadow-[0_10px_24px_rgba(16,185,129,0.10)]"
-            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-        )}
-      >
-        Yes, send on email
-      </button>
-
-      <button
-        type="button"
-        onClick={() => setSendPasswordEmail(false)}
-        className={cn(
-          "inline-flex min-h-[52px] items-center justify-center rounded-[18px] border px-4 text-sm font-semibold transition-all duration-200",
-          !sendPasswordEmail
-            ? "border-rose-300 bg-rose-50 text-rose-700 shadow-[0_10px_24px_rgba(244,63,94,0.10)]"
-            : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50",
-        )}
-      >
-        No, do not send
-      </button>
-    </div>
-  </div>
+<div className="rounded-[18px] border border-amber-100 bg-amber-50/70 px-4 py-3 text-sm text-amber-800">
+  For your privacy, the new password will not be sent by email. Please remember your updated password before saving.
 </div>
 
           <div className="flex gap-2">
@@ -940,7 +899,16 @@ const passwordLockInfo = getPasswordLockInfo(data?.lastPasswordChangedAt);
         onClose={() => setModalStep(null)}
       >
         <div className="space-y-4">
-          <div className="flex items-start gap-3 rounded-[18px] border border-emerald-100 bg-emerald-50/70 px-4 py-4">
+         <div
+  className={cn(
+    "flex items-start gap-3 rounded-[18px] px-4 py-4",
+    successMessage.toLowerCase().includes("failed") ||
+      successMessage.toLowerCase().includes("blocked") ||
+      successMessage.toLowerCase().includes("incorrect")
+      ? "border border-rose-100 bg-rose-50/70"
+      : "border border-emerald-100 bg-emerald-50/70",
+  )}
+>
             <div className="mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
               <CheckCircle2 className="h-5 w-5" />
             </div>

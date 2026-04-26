@@ -50,14 +50,14 @@ export class UsersController {
   ) {
     return this.usersService.updateMyAddress(req.user.id, dto);
   }
-@Post("me/verify-password")
-@Roles("SUPER_ADMIN", "ADMIN", "ADMIN_VIEWER", "PROPRIETOR", "USER")
-verifyMyPassword(
-  @Req() req: AuthenticatedRequest,
-  @Body() dto: { currentPassword: string },
-) {
-  return this.usersService.verifyMyPassword(req.user.id, dto);
-}
+  @Post("me/verify-password")
+  @Roles("SUPER_ADMIN", "ADMIN", "ADMIN_VIEWER", "PROPRIETOR", "USER")
+  verifyMyPassword(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: { currentPassword: string },
+  ) {
+    return this.usersService.verifyMyPassword(req.user.id, dto);
+  }
   @Patch("me/password")
   @Roles("SUPER_ADMIN", "ADMIN", "ADMIN_VIEWER", "PROPRIETOR", "USER")
   changeMyPassword(
