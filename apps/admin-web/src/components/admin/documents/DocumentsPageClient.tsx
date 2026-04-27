@@ -250,19 +250,35 @@ export default function DocumentsPageClient() {
     return null;
   };
 
-  const openActionMenu = (
+    const openActionMenu = (
     event: React.MouseEvent<HTMLButtonElement>,
     fileId: string,
   ) => {
     const rect = event.currentTarget.getBoundingClientRect();
+
+    const menuWidth = 192;
+    const menuHeight = 150;
+    const gap = 10;
+    const padding = 12;
+
+    const nextX = Math.min(
+      Math.max(padding, rect.right - menuWidth),
+      window.innerWidth - menuWidth - padding,
+    );
+
+    const hasSpaceBelow = rect.bottom + gap + menuHeight <= window.innerHeight - padding;
+
+    const nextY = hasSpaceBelow
+      ? rect.bottom + gap
+      : Math.max(padding, rect.top - menuHeight - gap);
 
     setActionMenu((prev) =>
       prev?.fileId === fileId
         ? null
         : {
             fileId,
-            x: Math.max(12, rect.right - 192),
-            y: rect.bottom + 10,
+            x: nextX,
+            y: nextY,
           },
     );
   };
