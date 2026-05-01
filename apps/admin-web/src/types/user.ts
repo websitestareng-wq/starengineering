@@ -27,10 +27,10 @@ export type CreateUserPayload = {
 export type UpdateUserPayload = {
   name: string;
   email: string;
-  phone?: string | null;
-  gstin?: string | null;
-  pan?: string | null;
-  address?: string | null;
+  phone?: string;
+  gstin?: string;
+  pan?: string;
+  address: string;
 };
 export type UsersResponse = {
   items: PortalUser[];
