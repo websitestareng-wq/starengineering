@@ -293,14 +293,14 @@ useEffect(() => {
     setMessage(null);
 
     try {
-      await updateUser(editUser.id, {
-        name: values.name.trim(),
-        email: values.email.trim(),
-        phone: values.phone.trim() || undefined,
-        gstin: values.gstin.trim() || undefined,
-        pan: values.pan.trim() || undefined,
-        address: values.address.trim(),
-      });
+     await updateUser(editUser.id, {
+  name: values.name.trim(),
+  email: values.email.trim(),
+  phone: values.phone.trim() || null,
+  gstin: values.gstin.trim() || null,
+  pan: values.pan.trim() || null,
+  address: values.address.trim() || null,
+});
 
       setEditUser(null);
       setMessage({
